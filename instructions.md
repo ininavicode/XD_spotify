@@ -3,5 +3,5 @@
 $ make
 
 2. Run
-$ make run IP=<ip> PORT=<port>
+$ make run PORT=<port>
 
