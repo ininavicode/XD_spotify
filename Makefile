@@ -1,7 +1,7 @@
 SRC_DIR = src
 BUILD_DIR = build
 
-MAIN_FILE = # !!!! ADD FILE WITH MAIN !!!
+MAIN_FILE = ClientUDP
 
 
 all:
