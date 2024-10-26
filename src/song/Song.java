@@ -26,10 +26,18 @@ public class Song {
         authorsList = new ArrayList<>(Arrays.asList(authors)); 
     }
 
-
-    public Song(String raw) throws ExceptionInInitializerError {
+    public Song(String rawChar) throws ExceptionInInitializerError {
         try {
-            setFromRaw(raw);
+            setFromCharRaw(rawChar);
+            
+        } catch (InvalidPropertiesFormatException e) {
+            throw new ExceptionInInitializerError(e.getMessage());
+        }
+    }
+
+    public Song(byte[] raw) throws ExceptionInInitializerError {
+        try {
+            setFromByteRaw(raw);
             
         } catch (InvalidPropertiesFormatException e) {
             throw new ExceptionInInitializerError(e.getMessage());
@@ -58,9 +66,18 @@ public class Song {
 
     /**
      * 
-     * @Return: The data of the instance converted to the format of the client-server communication
+     * @Return: The data of the instance to a byte raw
      */
-    public String toRaw() {
+    public byte[] toByteRaw() {
+        
+        return toCharRaw().getBytes();
+    }
+
+    /**
+     * This function returns the decoded byteRaw that should return toByteRaw method
+     * @return The string with the decoded data
+     */
+    public String toCharRaw() {
         String buffer = name;
         for (String author : authorsList) {
             buffer += ":" + author;
@@ -71,10 +88,10 @@ public class Song {
 
     /**
      * Overwrites the data of this instance with the data of the given raw
-     * @param raw : Formatted string with the data of the song and author(s)
+     * @param raw : Formatted string encoded with default charset with the data of the song and author(s)
      * @throws InvalidPropertiesFormatException: If the format of the raw is invalid
      */
-    public void setFromRaw(String raw) throws InvalidPropertiesFormatException {
+    public void setFromCharRaw(String raw) throws InvalidPropertiesFormatException {
         String[] parsedList = raw.split(":");
 
         authorsList = new ArrayList<>(parsedList.length);
@@ -88,6 +105,16 @@ public class Song {
         for (int i = 1 ; i < parsedList.length; i++) {
             authorsList.add(i - 1, parsedList[i]);
         }
+    }
+
+    /**
+     * Overwrites the data of this instance with the data of the given raw
+     * @param raw : Formatted string with the data of the song and author(s)
+     * @throws InvalidPropertiesFormatException: If the format of the raw is invalid
+     */
+    public void setFromByteRaw(byte[] raw) throws InvalidPropertiesFormatException {
+        String decodedRaw = new String(raw);
+        setFromCharRaw(decodedRaw);
     }
 
     @Override

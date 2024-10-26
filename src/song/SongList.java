@@ -3,22 +3,23 @@ package song;
 import java.util.ArrayList;
 
 public class SongList {
-    static public String toRaw(ArrayList<Song> songsList) {
+    static public byte[] toByteRaw(ArrayList<Song> songsList) {
         String buffer = "";
         final int songListSize = songsList.size();
 
         for (int i = 0; i < songListSize; i++) {
-            buffer += songsList.get(i).toRaw() + (i < (songListSize - 1) ? "\n" : "");
+            buffer += songsList.get(i).toCharRaw() + (i < (songListSize - 1) ? "\n" : "");
         }
 
-        return buffer;
+        return buffer.getBytes();
     } 
 
-    static public ArrayList<Song> fromRaw(String raw) throws ExceptionInInitializerError {
-        String[] songRawList = raw.split("\n");
-
+    static public ArrayList<Song> fromByteRaw(byte[] raw) throws ExceptionInInitializerError {
+        String decodedRaw = new String(raw);
+        String[] songRawList = decodedRaw.split("\n");
+        
         ArrayList<Song> output = new ArrayList<>(songRawList.length);
-
+        
         // generate a song for each string and add it into the songs list
         for (String songRaw : songRawList) {
             output.add(new Song(songRaw));

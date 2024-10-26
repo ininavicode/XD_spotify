@@ -1,17 +1,17 @@
 package main;
 
-import song.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import song.*;
 
 public class test {
 
     static enum TestCase_Song_toRaw {
 
-        _a_(new Song("Despacito", "Jose", "Carlos"), "Despacito:Jose:Carlos");
+        _a_(new Song("Despacito", "Jose", "Carlos"), "Despacito:Jose:Carlos".getBytes()),
+        _b_(new Song("Bajo la lluvia", "Naiara"), "Bajo la lluvia:Naiara".getBytes());
 
-        TestCase_Song_toRaw(Song input, String expected) {
+        TestCase_Song_toRaw(Song input, byte[] expected) {
             this.input = input;
             this.expected = expected;
         }
@@ -21,16 +21,16 @@ public class test {
 
         // ##################### properties #####################
         private Song input;
-        private String expected;
-        private String output;
+        private byte[] expected;
+        private byte[] output;
         private boolean correct;
 
         /**
          * @return: True if the test was successful
          */
         public void execute() {
-            output = input.toRaw();
-            correct = output.compareTo(expected) == 0;
+            output = input.toByteRaw();
+            correct = new Song(output).equals(new Song(expected));
 
             if (correct) {
                 countCorrect++;
@@ -51,7 +51,7 @@ public class test {
         /**
          * @return The expected of the tested function
          */
-        public String getOutput() {
+        public byte[] getOutput() {
             return output;
         }
 
@@ -82,8 +82,11 @@ public class test {
                 // Execute the test
                 test.execute();
 
-                // Print the test
-                System.out.print("\n" + test);
+                // Print the test if failed
+                if (!test.correct) {
+
+                    System.out.print("\n" + test);
+                }
 
             }
         }
@@ -91,10 +94,10 @@ public class test {
     }
 
     static enum TestCase_Song_fromRaw {
-        _a_("Despacito:Jose:Carlos", new Song("Despacito", "Jose", "Carlos")),
-        _b_("Despacito espaciado:Jose:Carlos", new Song("Despacito espaciado", "Jose", "Carlos"));
+        _a_("Despacito:Jose:Carlos".getBytes(), new Song("Despacito", "Jose", "Carlos")),
+        _b_("Despacito espaciado:Jose:Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos"));
 
-        TestCase_Song_fromRaw(String input, Song expected) {
+        TestCase_Song_fromRaw(byte[] input, Song expected) {
             this.input = input;
             this.expected = expected;
         }
@@ -103,7 +106,7 @@ public class test {
         static private int countCorrect = 0;
 
         // ##################### properties #####################
-        private String input;
+        private byte[] input;
         private Song expected;
         private Song output;
         private boolean correct = false;
@@ -165,8 +168,11 @@ public class test {
                 // Execute the test
                 test.execute();
 
-                // Print the test
-                System.out.print("\n" + test);
+                // Print the test if failed
+                if (!test.correct) {
+
+                    System.out.print("\n" + test);
+                }
 
             }
         }
@@ -179,9 +185,9 @@ public class test {
             new Song("Despacito", "Carlos", "Jose"),
             new Song("Tomame o dejame", "Naiara")
 
-        })), "Despacito:Carlos:Jose\nTomame o dejame:Naiara");
+        })), "Despacito:Carlos:Jose\nTomame o dejame:Naiara".getBytes());
 
-        TestCase_SongList_toRaw(ArrayList<Song> input, String expected) {
+        TestCase_SongList_toRaw(ArrayList<Song> input, byte[] expected) {
             this.input = input;
             this.expected = expected;
         }
@@ -191,16 +197,16 @@ public class test {
 
         // ##################### properties #####################
         private ArrayList<Song> input;
-        private String expected;
-        private String output;
+        private byte[] expected;
+        private byte[] output;
         private boolean correct;
 
         /**
          * @return: True if the test was successful
          */
         public void execute() {
-            output = SongList.toRaw(input);
-            correct = expected.compareTo(output) == 0;
+            output = SongList.toByteRaw(input);
+            correct = SongList.equals(SongList.fromByteRaw(output), SongList.fromByteRaw(expected));
 
             if (correct) {
                 countCorrect++;
@@ -221,7 +227,7 @@ public class test {
         /**
          * @return The expected of the tested function
          */
-        public String getOutput() {
+        public byte[] getOutput() {
             return output;
         }
 
@@ -252,8 +258,11 @@ public class test {
                 // Execute the test
                 test.execute();
 
-                // Print the test
-                System.out.print("\n" + test);
+                // Print the test if failed
+                if (!test.correct) {
+
+                    System.out.print("\n" + test);
+                }
 
             }
         }
@@ -262,13 +271,13 @@ public class test {
 
     static enum TestCase_SongList_fromRaw {
 
-        _a_("Despacito:Carlos:Jose\nTomame o dejame:Naiara", new ArrayList<Song>(Arrays.asList(new Song[]{
+        _a_("Despacito:Carlos:Jose\nTomame o dejame:Naiara".getBytes(), new ArrayList<Song>(Arrays.asList(new Song[]{
             new Song("Despacito", "Carlos", "Jose"),
             new Song("Tomame o dejame", "Naiara")
 
         })));
 
-        TestCase_SongList_fromRaw(String input, ArrayList<Song> expected) {
+        TestCase_SongList_fromRaw(byte[] input, ArrayList<Song> expected) {
             this.input = input;
             this.expected = expected;
         }
@@ -277,7 +286,7 @@ public class test {
         static private int countCorrect = 0;
 
         // ##################### properties #####################
-        private String input;
+        private byte[] input;
         private ArrayList<Song> expected;
         private ArrayList<Song> output;
         private boolean correct;
@@ -286,7 +295,7 @@ public class test {
          * @return: True if the test was successful
          */
         public void execute() {
-            output = SongList.fromRaw(input);
+            output = SongList.fromByteRaw(input);
             correct = SongList.equals(expected, output);
 
             if (correct) {
@@ -339,8 +348,11 @@ public class test {
                 // Execute the test
                 test.execute();
 
-                // Print the test
-                System.out.print("\n" + test);
+                // Print the test if failed
+                if (!test.correct) {
+
+                    System.out.print("\n" + test);
+                }
 
             }
         }
@@ -351,7 +363,7 @@ public class test {
     public static final String RED_BACKGROUND = "\033[1;30m" + "\033[41m";   // RED
     public static final String GREEN_BACKGROUND = "\033[1;30m" + "\033[42m"; // GREEN
     public static final String GRAY_BACKGROUND = "\033[1;30m" + "\033[37m" + "\033[48;5;235m"; // GRAY
-    
+
     public static final String RESET = "\033[0m";  // Text format reset
 
     public static void main(String[] args) {
