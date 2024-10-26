@@ -15,6 +15,9 @@ public class Song {
 
 
     // ##################### constructor #####################
+    /**
+     * Initializes the data of the instance with the given song name and authors
+     */
     public Song(String name, String ... authors) throws ExceptionInInitializerError {
         if (name == null || authors == null) {
             throw new ExceptionInInitializerError();
@@ -26,6 +29,9 @@ public class Song {
         authorsList = new ArrayList<>(Arrays.asList(authors)); 
     }
 
+    /**
+     * Initializes the instance with the data of the rawChar, that should be in the proper format
+     */
     public Song(String rawChar) throws ExceptionInInitializerError {
         try {
             setFromCharRaw(rawChar);
@@ -35,6 +41,9 @@ public class Song {
         }
     }
 
+    /**
+     * Initializes the instance with the data of the raw byte, that should be in the proper format
+     */
     public Song(byte[] raw) throws ExceptionInInitializerError {
         try {
             setFromByteRaw(raw);
