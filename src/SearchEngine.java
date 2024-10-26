@@ -40,12 +40,14 @@ public class SearchEngine {
      * Returns all the songs that have a coincidence with cond.
      * 
      * @param cond The string that conditions the result.
-     * @return The list of songs that contain cond.
+     * @return The sublist of songs that contain cond. If none matches cond, an empty list.
+     * @pre cond != null.
      */
     public ArrayList<Song> getSongsWithCondition(String cond) {
         ArrayList<Song> newList = new ArrayList<>();
+        String updatedCond = cond.toLowerCase();                // To ignore the upper or lower case with the searchs.
         songsHash.forEach((key, value) -> {
-                if(key.getName().startsWith(cond))
+                if(key.getName().toLowerCase().startsWith(updatedCond))
                     newList.add(key);
             }
         );
@@ -66,5 +68,24 @@ public class SearchEngine {
 
     public void removeSong(Song song) {
         if(song != null) songsHash.remove(song);
+    }
+
+    /* CLASS METHODS */
+    /**
+     * Class method that allows to search in a subList for the coincidences to cond.
+     * 
+     * @param subList The sublist from which the search will be executed.
+     * @param cond The string that holds the caracter 
+     * @return The sublist of songs that start with cond. If none matches cond, an empty list.
+     * @pre subList != null && cond != null.
+     */
+    public static ArrayList<Song> getSongsWithCondition(ArrayList<Song> subList, String cond) {
+        ArrayList<Song> newList = new ArrayList<>();
+        String updatedCond = cond.toLowerCase();                // To ignore the upper or lower case with the searchs.
+        for(Song elem : subList) {
+            if(elem.getName().toLowerCase().startsWith(updatedCond))
+                newList.add(elem);
+        }
+        return newList;
     }
 }
