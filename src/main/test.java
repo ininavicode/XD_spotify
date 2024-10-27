@@ -8,8 +8,8 @@ public class test {
 
     static enum TestCase_Song_toRaw {
 
-        _a_(new Song("Despacito", "Jose", "Carlos"), "Despacito:Jose:Carlos".getBytes()),
-        _b_(new Song("Bajo la lluvia", "Naiara"), "Bajo la lluvia:Naiara".getBytes());
+        _a_(new Song("Despacito", "Jose", "Carlos"), "Despacito;Jose;Carlos".getBytes()),
+        _b_(new Song("Bajo la lluvia", "Naiara"), "Bajo la lluvia;Naiara".getBytes());
 
         TestCase_Song_toRaw(Song input, byte[] expected) {
             this.input = input;
@@ -94,8 +94,8 @@ public class test {
     }
 
     static enum TestCase_Song_fromRaw {
-        _a_("Despacito:Jose:Carlos".getBytes(), new Song("Despacito", "Jose", "Carlos")),
-        _b_("Despacito espaciado:Jose:Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos"));
+        _a_("Despacito;Jose;Carlos".getBytes(), new Song("Despacito", "Jose", "Carlos")),
+        _b_("Despacito espaciado;Jose;Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos"));
 
         TestCase_Song_fromRaw(byte[] input, Song expected) {
             this.input = input;
@@ -185,7 +185,7 @@ public class test {
             new Song("Despacito", "Carlos", "Jose"),
             new Song("Tomame o dejame", "Naiara")
 
-        })), "Despacito:Carlos:Jose\nTomame o dejame:Naiara".getBytes());
+        })), "Despacito;Carlos;Jose\nTomame o dejame;Naiara".getBytes());
 
         TestCase_SongList_toRaw(ArrayList<Song> input, byte[] expected) {
             this.input = input;
@@ -271,7 +271,7 @@ public class test {
 
     static enum TestCase_SongList_fromRaw {
 
-        _a_("Despacito:Carlos:Jose\nTomame o dejame:Naiara".getBytes(), new ArrayList<Song>(Arrays.asList(new Song[]{
+        _a_("Despacito;Carlos;Jose\nTomame o dejame;Naiara".getBytes(), new ArrayList<Song>(Arrays.asList(new Song[]{
             new Song("Despacito", "Carlos", "Jose"),
             new Song("Tomame o dejame", "Naiara")
 

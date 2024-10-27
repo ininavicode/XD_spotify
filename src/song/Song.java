@@ -89,7 +89,7 @@ public class Song {
     public String toCharRaw() {
         String buffer = name;
         for (String author : authorsList) {
-            buffer += ":" + author;
+            buffer += ";" + author;
         }
 
         return buffer;
@@ -101,7 +101,7 @@ public class Song {
      * @throws InvalidPropertiesFormatException: If the format of the raw is invalid
      */
     public void setFromCharRaw(String raw) throws InvalidPropertiesFormatException {
-        String[] parsedList = raw.split(":");
+        String[] parsedList = raw.split(";");
 
         authorsList = new ArrayList<>(parsedList.length);
 
