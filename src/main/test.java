@@ -1,18 +1,22 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import song.*;
+import packetizer.*;
 
 public class test {
 
-    static enum TestCase_Song_toRaw {
+    static enum TestCase_Packetizer_nPacket {
 
-        _a_(new Song("Despacito", "Jose", "Carlos"), "Despacito;Jose;Carlos".getBytes()),
-        _b_(new Song("Bajo la lluvia", "Naiara"), "Bajo la lluvia;Naiara".getBytes());
+        _str1_("data/str_file_test.txt", 0, 3, 3, "Exa".getBytes()),
+        _str2_("data/str_file_test.txt", 1, 3, 3,"mpl".getBytes()),
+        _strEnd_("data/str_file_test.txt", 4, 3, 2, "se".getBytes()),
+        _strFirstEnd_("data/str_file_test.txt", 0, 15, 14, "Example phrase".getBytes());
 
-        TestCase_Song_toRaw(Song input, byte[] expected) {
+        TestCase_Packetizer_nPacket(String input, int nPacket, int packetsSize, int expectedSize, byte[] expected) {
             this.input = input;
+            this.nPacket = nPacket;
+            this.packetsSize = packetsSize;
+            this.expectedSize = expectedSize;
             this.expected = expected;
         }
 
@@ -20,7 +24,11 @@ public class test {
         static private int countCorrect = 0;
 
         // ##################### properties #####################
-        private Song input;
+        private String input;
+        private int nPacket;
+        private int packetsSize;
+        private int outputSize;
+        private int expectedSize;
         private byte[] expected;
         private byte[] output;
         private boolean correct;
@@ -29,8 +37,14 @@ public class test {
          * @return: True if the test was successful
          */
         public void execute() {
-            output = input.toByteRaw();
-            correct = new Song(output).equals(new Song(expected));
+            Packetizer packetizer = new Packetizer(packetsSize);
+            packetizer.setFile(input);
+
+            output = new byte[packetsSize];
+
+            outputSize = packetizer.getNthPacket(nPacket, output, 0);
+            correct = (outputSize == expectedSize);
+            correct = Arrays.compare(output, 0, expectedSize, expected, 0, expectedSize) == 0;
 
             if (correct) {
                 countCorrect++;
@@ -42,8 +56,10 @@ public class test {
             String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
 
             buffer += "\n\tinput: " + input.toString();
-            buffer += "\n\texpected: " + expected;
-            buffer += "\n\toutput: " + output;
+            buffer += "\n\texpected: " + new String(expected);
+            buffer += "\n\toutput: " + new String(output);
+            buffer += "\n\texpectedSize: " + expectedSize;
+            buffer += "\n\toutputSize: " + outputSize;
 
             return buffer;
         }
@@ -78,7 +94,7 @@ public class test {
 
         static public void executeAll() {
 
-            for (TestCase_Song_toRaw test : values()) {
+            for (TestCase_Packetizer_nPacket test : values()) {
                 // Execute the test
                 test.execute();
 
@@ -93,123 +109,42 @@ public class test {
 
     }
 
-    static enum TestCase_Song_fromRaw {
-        _a_("Despacito;Jose;Carlos".getBytes(), new Song("Despacito", "Jose", "Carlos")),
-        _b_("Despacito espaciado;Jose;Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos")),
-        
-        // tilde names
-        _t_("Song name;José".getBytes(), new Song("Song name", "José"));
+    static enum TestCase_Packetizer_NextPacket {
 
-        TestCase_Song_fromRaw(byte[] input, Song expected) {
+        _str0_("data/str_file_test.txt", 3, "Exa".getBytes(), "mpl".getBytes()),
+        _1_mp3_("data/AliciaKeys-NoOne.mp3", 3, "ID3".getBytes());
+
+        TestCase_Packetizer_NextPacket(String input, int packetsSize, byte[] ... expected) {
             this.input = input;
+            this.packetsSize = packetsSize;
             this.expected = expected;
         }
 
         // ##################### class properties #####################
         static private int countCorrect = 0;
-
         // ##################### properties #####################
-        private byte[] input;
-        private Song expected;
-        private Song output;
-        private boolean correct = false;
-
-        /**
-         * @return: True if the test was successful
-         */
-        public void execute() {
-            output = new Song(input);
-            correct = expected.equals(output);
-
-            if (correct) {
-                countCorrect++;
-            }
-        }
-
-        @Override
-        public String toString() {
-            String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
-
-            buffer += "\n\tinput: " + input;
-            buffer += "\n\texpected: " + expected.toString();
-            buffer += "\n\toutput: " + output.toString();
-
-            return buffer;
-        }
-
-        /**
-         * @return The expected of the tested function
-         */
-        public String getOutput() {
-            return output.toString();
-        }
-
-        /**
-         * @return If the executed test was correct, returns true
-         */
-        public boolean isCorrect() {
-            return correct;
-        }
-
-        // ##################### static methods #####################
-        static public int correctCasesCount() {
-            return countCorrect;
-        }
-
-        static public boolean allCorrect() {
-            return (countCorrect == values().length);
-        }
-
-        static public void resumeResults() {
-            System.out.printf((allCorrect() ? GREEN_BACKGROUND : RED_BACKGROUND) + "\nCorrect / Total -> %d / %d" + RESET, correctCasesCount(), values().length);
-
-        }
-
-        static public void executeAll() {
-
-            for (TestCase_Song_fromRaw test : values()) {
-                // Execute the test
-                test.execute();
-
-                // Print the test if failed
-                if (!test.correct) {
-
-                    System.out.print("\n" + test);
-                }
-
-            }
-        }
-
-    }
-
-    static enum TestCase_SongList_toRaw {
-
-        _a_(new ArrayList<Song>(Arrays.asList(new Song[]{
-            new Song("Despacito", "Carlos", "Jose"),
-            new Song("Tomame o dejame", "Naiara")
-
-        })), "Despacito;Carlos;Jose\nTomame o dejame;Naiara".getBytes());
-
-        TestCase_SongList_toRaw(ArrayList<Song> input, byte[] expected) {
-            this.input = input;
-            this.expected = expected;
-        }
-
-        // ##################### class properties #####################
-        static private int countCorrect = 0;
-
-        // ##################### properties #####################
-        private ArrayList<Song> input;
-        private byte[] expected;
-        private byte[] output;
+        private String input;
+        private int packetsSize;
+        private byte[][] expected;
+        private byte[][] output;
         private boolean correct;
 
         /**
          * @return: True if the test was successful
          */
         public void execute() {
-            output = SongList.toByteRaw(input);
-            correct = SongList.equals(SongList.fromByteRaw(output), SongList.fromByteRaw(expected));
+            Packetizer packetizer = new Packetizer(packetsSize);
+            packetizer.setFile(input);
+
+            output = new byte[expected.length][packetsSize];
+
+            // for each expected packet, test it, if anyone fails, the test fails
+            for (int i = 0; i < expected.length; i++) {
+                packetizer.getNextPacket(output[i], 0);
+                correct = new String(expected[i]).trim().compareTo(new String(output[i]).trim()) == 0;
+
+                if (!correct) break;
+            }
 
             if (correct) {
                 countCorrect++;
@@ -221,8 +156,14 @@ public class test {
             String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
 
             buffer += "\n\tinput: " + input.toString();
-            buffer += "\n\texpected: " + expected;
-            buffer += "\n\toutput: " + output;
+            buffer += "\n\texpected packets: ";
+            for (byte[] packet : expected) {
+                buffer += "\n\t: " + new String(packet);
+            }
+            buffer += "\n\toutput packets: ";
+            for (byte[] packet : output) {
+                buffer += "\n\t: " + new String(packet);
+            }
 
             return buffer;
         }
@@ -230,7 +171,7 @@ public class test {
         /**
          * @return The expected of the tested function
          */
-        public byte[] getOutput() {
+        public byte[][] getOutput() {
             return output;
         }
 
@@ -257,7 +198,7 @@ public class test {
 
         static public void executeAll() {
 
-            for (TestCase_SongList_toRaw test : values()) {
+            for (TestCase_Packetizer_NextPacket test : values()) {
                 // Execute the test
                 test.execute();
 
@@ -272,170 +213,74 @@ public class test {
 
     }
 
-    static enum TestCase_SongList_fromRaw {
 
-        _a_("Despacito;Carlos;Jose\nTomame o dejame;Naiara".getBytes(), new ArrayList<Song>(Arrays.asList(new Song[]{
-            new Song("Despacito", "Carlos", "Jose"),
-            new Song("Tomame o dejame", "Naiara")
+    static enum TestCase_Packetizer_FileFromPacket {
 
-        })));
+        // this test is verified visualy, looking at the generated files
+        _Gstr0_("data/Gstr0.txt", 3, 0, "Exa".getBytes(), "mpl".getBytes()),
+        _Gstr1_("data/Gstr1.txt", 3, 1, "<Exa".getBytes(), "<mpl".getBytes());
 
-        TestCase_SongList_fromRaw(byte[] input, ArrayList<Song> expected) {
+        TestCase_Packetizer_FileFromPacket(String input, int packetsSize, int off, byte[] ... packets) {
             this.input = input;
-            this.expected = expected;
+            this.off = off;
+            this.packetsSize = packetsSize;
+            this.packets = packets;
         }
 
         // ##################### class properties #####################
         static private int countCorrect = 0;
-
         // ##################### properties #####################
-        private byte[] input;
-        private ArrayList<Song> expected;
-        private ArrayList<Song> output;
+        private String input;
+        private int off;
+        private int packetsSize;
+        private byte[][] packets;
         private boolean correct;
 
         /**
          * @return: True if the test was successful
          */
         public void execute() {
-            output = SongList.fromByteRaw(input);
-            correct = SongList.equals(expected, output);
-
-            if (correct) {
-                countCorrect++;
-            }
-        }
-
-        @Override
-        public String toString() {
-            String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
-
-            buffer += "\n\tinput: " + input.toString();
-            buffer += "\n\texpected: " + expected;
-            buffer += "\n\toutput: " + output;
-
-            return buffer;
-        }
-
-        /**
-         * @return The expected of the tested function
-         */
-        public ArrayList<Song> getOutput() {
-            return output;
-        }
-
-        /**
-         * @return If the executed test was correct, returns true
-         */
-        public boolean isCorrect() {
-            return correct;
-        }
-
-        // ##################### static methods #####################
-        static public int correctCasesCount() {
-            return countCorrect;
-        }
-
-        static public boolean allCorrect() {
-            return (countCorrect == values().length);
-        }
-
-        static public void resumeResults() {
-            System.out.printf((allCorrect() ? GREEN_BACKGROUND : RED_BACKGROUND) + "\nCorrect / Total -> %d / %d" + RESET, correctCasesCount(), values().length);
-
-        }
-
-        static public void executeAll() {
-
-            for (TestCase_SongList_fromRaw test : values()) {
-                // Execute the test
-                test.execute();
-
-                // Print the test if failed
-                if (!test.correct) {
-
-                    System.out.print("\n" + test);
-                }
-
-            }
-        }
-
-    }
-
-    static enum TestCase_SongList_fromFile {
-
-        // songs with 1 author
-        _a_("data/_a_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
-            new Song("Gata bajo la lluvia", "Naiara"),
-            new Song("Bohemian Rhapsody","Queen"),
-            new Song("Terriblemente Cruel", "Leiva"),
-            new Song("Devuelveme a mi chica", "Hombres G")
-
-        }))),
-
-        // songs with 1 or 2 authors
-        _b_("data/_b_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
-            new Song("Eenie Meenie", "Sean Kingston", "Justin Bieber"),
-            new Song("Girlfriend", "Avril Lavigne")
-
-        }))),
-
-        // 0 songs
-        _0_("data/_0_.csv", new ArrayList<Song>(1)),
-
-        // tildes
-        _t_("data/_t_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
-            new Song("Al paraíso", "Pablo Alborán")
-        })));
-
-        TestCase_SongList_fromFile(String filename, ArrayList<Song> expected) {
-            this.filename = filename;
-            this.expected = expected;
-        }
-
-        // ##################### class properties #####################
-        static private int countCorrect = 0;
-
-        // ##################### properties #####################
-        private String filename;
-        private ArrayList<Song> expected;
-        private ArrayList<Song> output;
-        private boolean correct;
-
-        /**
-         * @return: True if the test was successful
-         */
-        public void execute() {
+            FileFromPacket dePacketizer = null;
             try {
-                output = SongList.fromFile(filename);
-                
-            } catch (Exception e) {
-                System.out.printf("\nFile %s not found -> %s", filename, e.getMessage());
-                return;
-            }
-            correct = SongList.equals(expected, output);
 
-            if (correct) {
-                countCorrect++;
+                dePacketizer = new FileFromPacket(input);
             }
+            catch (Exception e) {
+                System.out.print("\nError Initializing FileFromPacket on test FileFromPacket");
+            }
+
+            if (dePacketizer != null) {
+
+                for (byte[] packet : packets) {
+                    try {
+    
+                        dePacketizer.appendPacket(packet, off, packetsSize);
+                    }
+                    catch (Exception e) {
+                        System.out.print("\nError appending packet on test FileFromPacket");
+                    }
+                }
+
+                try {
+    
+                    dePacketizer.close();
+                }
+                catch (Exception e) {
+                    System.out.print("\nError closing FileFromPacket on test FileFromPacket");
+                }
+                
+            }
+            // output = new byte[expected.length][packetsSize];
+
+            // if (correct) {
+            //     countCorrect++;
+            // }
         }
 
         @Override
         public String toString() {
-            String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
 
-            buffer += "\n\tinput: " + filename.toString();
-            buffer += "\n\texpected: " + expected;
-            buffer += "\n\toutput: " + output;
-
-            return buffer;
-        }
-
-        /**
-         * @return The expected of the tested function
-         */
-        public ArrayList<Song> getOutput() {
-            return output;
+            return "";
         }
 
         /**
@@ -461,7 +306,7 @@ public class test {
 
         static public void executeAll() {
 
-            for (TestCase_SongList_fromFile test : values()) {
+            for (TestCase_Packetizer_FileFromPacket test : values()) {
                 // Execute the test
                 test.execute();
 
@@ -475,6 +320,7 @@ public class test {
         }
 
     }
+
 
     // Styling the result of the tests
     public static final String RED_BACKGROUND = "\033[1;30m" + "\033[41m";   // RED
@@ -485,31 +331,22 @@ public class test {
 
     public static void main(String[] args) {
 
-        // ############################ TestCase_Song_toRaw ############################
-        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_Song_toRaw" + RESET);
-        TestCase_Song_toRaw.executeAll();
-        TestCase_Song_toRaw.resumeResults();
+        // ############################ TestCase_Packetizer_nPacket ############################
+        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_Packetizer_nPacket" + RESET);
+        TestCase_Packetizer_nPacket.executeAll();
+        TestCase_Packetizer_nPacket.resumeResults();
 
-        // ############################ TestCase_Song_fromRaw ############################
-        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_Song_fromRaw" + RESET);
-        TestCase_Song_fromRaw.executeAll();
-        TestCase_Song_fromRaw.resumeResults();
+        // ############################ TestCase_Packetizer_NextPacket ############################
+        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_Packetizer_NextPacket" + RESET);
+        TestCase_Packetizer_NextPacket.executeAll();
+        TestCase_Packetizer_NextPacket.resumeResults();
 
-        // ############################ TestCase_SongList_toRaw ############################
-        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_SongList_toRaw" + RESET);
-        TestCase_SongList_toRaw.executeAll();
-        TestCase_SongList_toRaw.resumeResults();
-
-        // ############################ TestCase_SongList_fromRaw ############################
-        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_SongList_fromRaw" + RESET);
-        TestCase_SongList_fromRaw.executeAll();
-        TestCase_SongList_fromRaw.resumeResults();
-        
-        // ############################ TestCase_SongList_fromFile ############################
-        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_SongList_fromFile" + RESET);
-        TestCase_SongList_fromFile.executeAll();
-        TestCase_SongList_fromFile.resumeResults();
+        // ############################ TestCase_Packetizer_FileFromPacket ############################
+        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_Packetizer_FileFromPacket" + RESET);
+        TestCase_Packetizer_FileFromPacket.executeAll();
 
         System.out.print("\n");
+
+        
     }
 }
