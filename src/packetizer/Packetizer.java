@@ -85,7 +85,8 @@ public class Packetizer {
     }
 
     /**
-     * Reads the nth packet of data from the file, where n is zero-indexed.
+     * Reads the nth packet of data from the file, where n is zero-indexed. The cursor of the loaded file is moved
+     *  to the next byte of the end of the requested paquet, so be careful when using getNextPacket after this method is used
      * @param n : The packet number to read.
      * @param packetOutput : Where the data of the packet will be stored.
      * @param off : The initial posistion where the data will be stored at the packetOutput
