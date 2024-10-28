@@ -95,7 +95,10 @@ public class test {
 
     static enum TestCase_Song_fromRaw {
         _a_("Despacito;Jose;Carlos".getBytes(), new Song("Despacito", "Jose", "Carlos")),
-        _b_("Despacito espaciado;Jose;Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos"));
+        _b_("Despacito espaciado;Jose;Carlos".getBytes(), new Song("Despacito espaciado", "Jose", "Carlos")),
+        
+        // tilde names
+        _t_("Song name;José".getBytes(), new Song("Song name", "José"));
 
         TestCase_Song_fromRaw(byte[] input, Song expected) {
             this.input = input;
@@ -359,6 +362,120 @@ public class test {
 
     }
 
+    static enum TestCase_SongList_fromFile {
+
+        // songs with 1 author
+        _a_("data/_a_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
+            new Song("Gata bajo la lluvia", "Naiara"),
+            new Song("Bohemian Rhapsody","Queen"),
+            new Song("Terriblemente Cruel", "Leiva"),
+            new Song("Devuelveme a mi chica", "Hombres G")
+
+        }))),
+
+        // songs with 1 or 2 authors
+        _b_("data/_b_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
+            new Song("Eenie Meenie", "Sean Kingston", "Justin Bieber"),
+            new Song("Girlfriend", "Avril Lavigne")
+
+        }))),
+
+        // 0 songs
+        _0_("data/_0_.csv", new ArrayList<Song>(1)),
+
+        // tildes
+        _t_("data/_t_.csv", new ArrayList<Song>(Arrays.asList(new Song[]{
+            new Song("Al paraíso", "Pablo Alborán")
+        })));
+
+        TestCase_SongList_fromFile(String filename, ArrayList<Song> expected) {
+            this.filename = filename;
+            this.expected = expected;
+        }
+
+        // ##################### class properties #####################
+        static private int countCorrect = 0;
+
+        // ##################### properties #####################
+        private String filename;
+        private ArrayList<Song> expected;
+        private ArrayList<Song> output;
+        private boolean correct;
+
+        /**
+         * @return: True if the test was successful
+         */
+        public void execute() {
+            try {
+                output = SongList.fromFile(filename);
+                
+            } catch (Exception e) {
+                System.out.printf("\nFile %s not found -> %s", filename, e.getMessage());
+                return;
+            }
+            correct = SongList.equals(expected, output);
+
+            if (correct) {
+                countCorrect++;
+            }
+        }
+
+        @Override
+        public String toString() {
+            String buffer = ((correct == true) ? GREEN_BACKGROUND : RED_BACKGROUND) + "Test " + name() + ((correct == true) ? " -> correct" : " -> wrong") + RESET;
+
+            buffer += "\n\tinput: " + filename.toString();
+            buffer += "\n\texpected: " + expected;
+            buffer += "\n\toutput: " + output;
+
+            return buffer;
+        }
+
+        /**
+         * @return The expected of the tested function
+         */
+        public ArrayList<Song> getOutput() {
+            return output;
+        }
+
+        /**
+         * @return If the executed test was correct, returns true
+         */
+        public boolean isCorrect() {
+            return correct;
+        }
+
+        // ##################### static methods #####################
+        static public int correctCasesCount() {
+            return countCorrect;
+        }
+
+        static public boolean allCorrect() {
+            return (countCorrect == values().length);
+        }
+
+        static public void resumeResults() {
+            System.out.printf((allCorrect() ? GREEN_BACKGROUND : RED_BACKGROUND) + "\nCorrect / Total -> %d / %d" + RESET, correctCasesCount(), values().length);
+
+        }
+
+        static public void executeAll() {
+
+            for (TestCase_SongList_fromFile test : values()) {
+                // Execute the test
+                test.execute();
+
+                // Print the test if failed
+                if (!test.correct) {
+
+                    System.out.print("\n" + test);
+                }
+
+            }
+        }
+
+    }
+
     // Styling the result of the tests
     public static final String RED_BACKGROUND = "\033[1;30m" + "\033[41m";   // RED
     public static final String GREEN_BACKGROUND = "\033[1;30m" + "\033[42m"; // GREEN
@@ -387,6 +504,11 @@ public class test {
         System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_SongList_fromRaw" + RESET);
         TestCase_SongList_fromRaw.executeAll();
         TestCase_SongList_fromRaw.resumeResults();
+        
+        // ############################ TestCase_SongList_fromFile ############################
+        System.out.print(GRAY_BACKGROUND + "\n\nStarting " + "TestCase_SongList_fromFile" + RESET);
+        TestCase_SongList_fromFile.executeAll();
+        TestCase_SongList_fromFile.resumeResults();
 
         System.out.print("\n");
     }

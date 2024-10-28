@@ -1,6 +1,9 @@
 package song;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class SongList {
     /**
@@ -35,6 +38,45 @@ public class SongList {
         return output;
     }
 
+    // TOTEST: Get the data of the songs list from a .csv file
+    /**
+     * @return  If the file is empty (0 songs), returns an empty ArrayList<Song>(1)
+     *          If the file contains data, returns an ArrayList<Song> with the proper data
+     * @throws FileNotFoundException If the file does not exist
+     */
+    public static ArrayList<Song> fromFile(String filename) throws FileNotFoundException {
+
+        File file = new File(filename);
+
+        if (!file.exists()) {
+            throw new FileNotFoundException("The file " + filename + " does not exist");
+        }
+        
+        Scanner scanner = new Scanner(file);
+        
+        // obtain the number of songs at the file
+        String parsed = scanner.nextLine();
+        int nSongs = Integer.parseInt(parsed);
+
+        if (nSongs > 0) {
+            ArrayList<Song> output = new ArrayList<>(nSongs);
+    
+            for (int i = 0; i < nSongs; i++) {
+                // add a new song with the data of the next line of the file
+                output.add(new Song(scanner.nextLine()));
+            }
+
+            scanner.close();
+            return output;
+        }
+        else {
+            scanner.close();
+            return new ArrayList<>(1);
+        }
+
+        
+	}
+
     /**
      * @return True if s1(i) = s2(2) for each i, and s1.size = s2.size
      */
@@ -51,5 +93,6 @@ public class SongList {
 
         return true;
     }
+    
 
 }
