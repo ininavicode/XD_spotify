@@ -1,7 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-         
+        {
+            "type": "java",
+            "name": "testingMP3",
+            "request": "launch",
+            "mainClass": "testingMP3",
+            "projectName": "XD_spotify_c9c3e993"
+        },
         {
             "type": "java",
             "name": "Attach to Java Debugger",
