@@ -1,15 +1,10 @@
 package protocol;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 import packetizer.Packetizer;
 import song.*;
 
@@ -166,8 +161,8 @@ public class Server {
             packetToSend[0] = (byte)(nPacket >> 8);
             packetToSend[1] = (byte)nPacket;
 
-            responseDatagram.setData(packetToSend);
-            // responseDatagram.setLength(packetLenght + 2);
+            // set the length of the packet and the data
+            responseDatagram.setData(packetToSend, 0, packetLenght + 2);
 
             datagramSocket.send(responseDatagram);
 
@@ -178,7 +173,7 @@ public class Server {
         
     }
 
-    // NOTE: Specific packet request could be optimized keeping the packetizer open
+    // OPTIMIZATION: Specific packet request could be optimized keeping the packetizer open
     //  to not re-open the file for each request (optimized with the clientID)
     public void responseMP3Packet(String filename, int packetID) throws IOException {
         // ##################### Send the packets #####################

@@ -38,7 +38,6 @@ public class SongList {
         return output;
     }
 
-    // TOTEST: Get the data of the songs list from a .csv file
     /**
      * @return  If the file is empty (0 songs), returns an empty ArrayList<Song>(1)
      *          If the file contains data, returns an ArrayList<Song> with the proper data

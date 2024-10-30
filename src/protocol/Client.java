@@ -8,10 +8,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import song.*;
 import packetizer.FileFromPacket;
+import song.*;
 
 
 public class Client {
@@ -96,7 +95,7 @@ public class Client {
         // 1.1 If the number of the message is 0, that means that the song does not exist 
         //  (we will not treat this case, as the application doesn't allow the client to request an unexisting song)
         // 1.2 Reserve memory for all the packets to receive
-        // FIXME: Analize what happens if the client does not receive the message with the n packets to receive
+        // REVIEW: Analize what happens if the client does not receive the message with the n packets to receive
         // 2. Enter into a loop, storing each packet received into the reserved list at the step 2
         // 3. Once the timeout is on, check if all the packets at the list are not null, if any packet is null,
         //  request it to the server
@@ -138,7 +137,7 @@ public class Client {
                 if (packetsList[packetID] == null) {
                     receivedCount++;
                     // copy the data of the mp3 packet
-                    packetsList[packetID] = Arrays.copyOfRange(responseDatagram.getData(), 2, responseDatagram.getLength() - 2);
+                    packetsList[packetID] = Arrays.copyOfRange(responseDatagram.getData(), 2, responseDatagram.getLength());
                 }
 
                 if (receivedCount == nPacketsToReceive) {
@@ -227,7 +226,5 @@ public class Client {
 
         return response;
     }
-
-    // TODO: all the other methods
     
 }
