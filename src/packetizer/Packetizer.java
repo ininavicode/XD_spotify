@@ -61,6 +61,10 @@ public class Packetizer {
 
     // ##################### getters #####################
 
+    public short getTotalPackets() {
+        return (short)(Math.floor(loadedFile.length() / packetsSize) + 1);
+    }
+
     /**
      * Reads the next packet of data from the file.
      * @param packetOutput : Where the data of the packet will be stored.
