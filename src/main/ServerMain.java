@@ -1,30 +1,54 @@
 package main;
 
 import java.io.IOException;
-import java.net.ProtocolException;
-import java.rmi.server.ServerCloneException;
-import javax.net.ssl.SSLSessionBindingListener;
+import java.util.ArrayList;
 import protocol.*;
 import song.*;
-import java.util.ArrayList;
 
 public class ServerMain {
     public static void main(String[] args) throws IOException {
         
-        Protocol.Server server = new Protocol.Server(12000);
+        Server server = new Server(12000);
         
         while (true) { 
             System.out.print("\nWaiting for packets");
             server.waitForPacket();
+
             Protocol.COMMAND_TYPE commandType = server.getLastPacketCommandType();
+
             System.out.print("\nCommand type: " + commandType.name());
-            System.out.print("\nSong name: " + SongList.fromByteRaw(server.getLastPacket_SongName().getBytes()));
-            System.out.print("\nClient ID: " + server.getLastPacket_ClientID());
 
-            ArrayList<Song> searchEngineByPassResponse = SongList.fromByteRaw("Tocado y hundido;Melendi\nTomame o dejame;Naiara".getBytes());
+            switch (commandType) {
+                case SEARCH_ENGINE_REQUEST:
+                    System.out.print("\nSong name: " + server.getLastPacket_SongName());
+                    System.out.print("\nClient ID: " + server.getLastPacket_ClientID());
 
-            System.out.print("\nSending response to client");
-            server.Response_searchEngine((short)1, searchEngineByPassResponse);
+                    ArrayList<Song> searchEngineByPassResponse = SongList.fromByteRaw(
+                    "Tocado y hundido;Melendi\nTomame o dejame;Naiara\n".getBytes()
+                    );
+
+                    System.out.print("\nSending response to client");
+                    server.ResponseSearchEngine(new Protocol.ResponseSearchEngine_t((short)1, searchEngineByPassResponse));
+
+                    break;
+                case SONG_MP3_REQUEST:
+                    System.out.print("\nSong name: " + server.getLastPacket_SongName());
+
+                    server.ResponseMP3("data/tosend.txt");
+
+                    break;
+                case SONG_MP3_PACKET_REQUEST:
+                    System.out.print("\nSong name: " + server.getLastPacket_SongName());
+                    System.out.print("\nPacket ID: " + server.getLastPacket_PacketID());
+
+                    server.responseMP3Packet("data/tosend.txt", server.getLastPacket_PacketID());
+
+                    break;
+                default:
+                    break;
+            }
+
+            
         }
         
     }

@@ -1,25 +1,28 @@
 package main;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import protocol.Protocol;
+import protocol.*;
 import song.*;
 
 public class ClientMain {
     public static void main(String[] args) throws IOException {
         
-        Protocol.Client client = new Protocol.Client("127.0.0.1", 12000);
+        Client client = new Client("127.0.0.1", 12000);
 
-        System.out.print("\nClick something to send");
+        System.out.print("\nClick enter to send");
         System.in.read();
-        client.Request_searchEngine("Tomame o dejame;Naiara");
-
-        System.out.print("\nWaiting for server response");
-        ArrayList<Song> songList = client.Receive_searchEngine();
-
-        System.out.print("\nServer response: " + songList);
-        System.out.print("\nAssigned clientID: " + client.getClientID());
         
-        System.out.print("\n");
+        // ##################### REQUEST SEARCH ENGINE #####################
+        // client.RequestSearchEngine(new RequestSearchEngine_t((short)-1, "Tomame o dejame Naiara"));
+
+        // System.out.print("\nWaiting for server response");
+        // Protocol.ResponseSearchEngine_t response = client.ReceiveSearchEngine();
+
+        // System.out.print("\nServer response: " + response.songList);
+        
+        // System.out.print("\n");
+
+        // ##################### REQUEST MP3 #####################
+        client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/strtest.txt");
     }
 }
