@@ -3,10 +3,13 @@
     "configurations": [
         {
             "type": "java",
-            "name": "testingMP3",
+            "name": "testMP3Player",
             "request": "launch",
-            "mainClass": "testingMP3",
-            "projectName": "XD_spotify_c9c3e993"
+            "mainClass": "main.testMP3Player",
+            "projectName": "XD_spotify_c9c3e993",
+            "classPaths": [
+                "lib\\jlayer-1.0.3.jar"
+            ]
         },
         {
             "type": "java",
