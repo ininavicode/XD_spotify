@@ -2,13 +2,13 @@ package code;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.*;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 public class MP3Player {
     private Player mp3Player;
     private FileInputStream file;
+    private Thread reproducerThread;
 
     /**
      * Constructor of the class. 
@@ -25,7 +25,6 @@ public class MP3Player {
         }
     }
 
-    /* GETTERS */
     /* GETTERS */
 
     /**
@@ -48,16 +47,24 @@ public class MP3Player {
     // }
 
     /**
-     * Method to play the file.
+     * Method to play the file in a thread (that will be stored in reproducerThread).
      */
     public void play() {
-        
-        new Thread(() -> {
+        // A new thread has to be called in order to make other operations, such as pause the music.
+        reproducerThread = new Thread(() -> {
             try {
                 mp3Player.play();
             } catch (Exception e) {
                 System.err.println("Couldn't play the track.");
             }
-        }).start();
+        }, "repro");
+        reproducerThread.start();
     }
+
+    /**
+     * Method to pause the track.
+     */
+    public void pause() {
+        // TODO: Implement this.
+    }   
 }
