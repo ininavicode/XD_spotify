@@ -101,7 +101,7 @@ public class Client {
         // 3. Once the timeout is on, check if all the packets at the list are not null, if any packet is null,
         //  request it to the server
 
-        byte[] buffer = new byte[2];    // in theory, the sent number is an unsigned short
+        byte[] buffer = new byte[1500];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
         // TODO: Implement the timeout
@@ -120,8 +120,8 @@ public class Client {
         // Step 1.2
         // reserve space for n packets of Protocol.MP3_PACKET_DATA_MAX_SIZE 
         byte[][] packetsList = new byte[nPacketsToReceive][(int)Protocol.MP3_PACKET_DATA_MAX_SIZE];
-        for (byte[] packet : packetsList) {
-            packet = null;
+        for (int i = 0; i < nPacketsToReceive; i++) { // A for each cannot be used as copies to the values are accessed, instead of the references.
+            packetsList[i] = null;
         }
 
         // Step 2

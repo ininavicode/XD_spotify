@@ -167,7 +167,7 @@ public class Server {
             packetToSend[1] = (byte)nPacket;
 
             responseDatagram.setData(packetToSend);
-            responseDatagram.setLength(packetLenght + 2);
+            // responseDatagram.setLength(packetLenght + 2);
 
             datagramSocket.send(responseDatagram);
 

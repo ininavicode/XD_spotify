@@ -24,5 +24,6 @@ public class ClientMain {
 
         // ##################### REQUEST MP3 #####################
         client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/strtest.txt");
+        // TODO: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
     }
 }
