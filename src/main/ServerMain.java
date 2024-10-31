@@ -31,20 +31,21 @@ public class ServerMain {
                     server.ResponseSearchEngine(new Protocol.ResponseSearchEngine_t((short)1, searchEngineByPassResponse));
 
                     break;
-                case SONG_MP3_REQUEST:
+                case SONG_MP3_N_PACKETS_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
 
-                    server.ResponseMP3("data/tosend.txt");
+                    server.responseNPacketsOfSong("data/song.mp3");
 
                     break;
-                case SONG_MP3_PACKET_REQUEST:
+                case SONG_MP3_PACKETS_RANGE_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
-                    System.out.print("\nPacket ID: " + server.getLastPacket_PacketID());
+                    System.out.print("\nStart Packet ID: " + server.getLastPacket_StartPacketID());
+                    System.out.print("\nEnd Packet ID: " + server.getLastPacket_EndPacketID());
 
-                    server.responseMP3Packet("data/tosend.txt", server.getLastPacket_PacketID());   // send a text test file
-                    // server.responseMP3Packet("data/song.mp3", server.getLastPacket_PacketID());  // send the mp3
+                    server.responseMP3PacketRange("data/song.mp3", server.getLastPacket_StartPacketID(), server.getLastPacket_EndPacketID());  // send the mp3
 
                     break;
+
                 default:
                     break;
             }

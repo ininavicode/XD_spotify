@@ -76,21 +76,26 @@ public class Server {
     public String getLastPacket_SongName() {
         byte[] encodedStr;
 
-        // ############ SONG_MP3_REQUEST ############
-        if (lastPacketCommandType == Protocol.COMMAND_TYPE.SONG_MP3_REQUEST) {
+        // ##################### SONG_MP3_N_PACKETS_REQUEST #####################
+        if (lastPacketCommandType == Protocol.COMMAND_TYPE.SONG_MP3_N_PACKETS_REQUEST) {
             return new String(lastPacketData);
 
         }
 
         // ############ SEARCH_ENGINE_REQUEST ############
-        // ############ SONG_MP3_PACKET_REQUEST ############
-        else if (   lastPacketCommandType == Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST ||
-                    lastPacketCommandType == Protocol.COMMAND_TYPE.SONG_MP3_PACKET_REQUEST) {
+        // ############ SONG_MP3_PACKETS_RANGE_REQUEST ############
+        else if (lastPacketCommandType == Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST) {
             encodedStr = new byte[lastPacketData.length - 2];
             lastPacketByteBuffer.get(2, encodedStr, 0, encodedStr.length);
 
             return new String(encodedStr);
 
+        }
+        else if (lastPacketCommandType == Protocol.COMMAND_TYPE.SONG_MP3_PACKETS_RANGE_REQUEST) {
+            encodedStr = new byte[lastPacketData.length - 4];
+            lastPacketByteBuffer.get(4, encodedStr, 0, encodedStr.length);
+
+            return new String(encodedStr);
         }
 
         return null;
@@ -121,6 +126,31 @@ public class Server {
     }
 
 
+    // ############ SONG_MP3_PACKETS_RANGE_REQUEST ############
+    public short getLastPacket_StartPacketID() {
+
+        // | byte index | data                         |
+        // | ---------- | ---------------------------- |
+        // | 0          | command type                 |
+        // | 1...2      | packet id start (included)   |
+        // | 3...4      | packet id end (not included) |
+        // | 5...1500   | song name                    |
+
+        return lastPacketByteBuffer.getShort(0);
+    }
+
+    public short getLastPacket_EndPacketID() {
+
+        // | byte index | data                         |
+        // | ---------- | ---------------------------- |
+        // | 0          | command type                 |
+        // | 1...2      | packet id start (included)   |
+        // | 3...4      | packet id end (not included) |
+        // | 5...1500   | song name                    |
+
+        return lastPacketByteBuffer.getShort(2);
+    }
+
     // ##################### responses #####################
     public void ResponseSearchEngine(Protocol.ResponseSearchEngine_t response) throws IOException {
         byte[] encodedSongList = SongList.toByteRaw(response.songList);
@@ -137,65 +167,54 @@ public class Server {
 
     }
 
-    public void ResponseMP3(String filename) throws IOException {
-        ByteBuffer byteBuffer = ByteBuffer.allocate((int)Protocol.MP3_PACKET_DATA_MAX_SIZE + 2);
+    // OPTIMIZATION: Packets range request could be optimized keeping the packetizer open
+    //  to not re-open the file for each request (optimized with the session)
+    /**
+     * The range of packets [startPacketID, endPacketID) of the given filename, is sent to the client 
+     */
+    public void responseMP3PacketRange(String filename, short startPacketID, short endPacketID) throws IOException {
 
         Packetizer packetizer = new Packetizer((int)Protocol.MP3_PACKET_DATA_MAX_SIZE);
         packetizer.setFile(filename);
-
-        // #####################  Send the total packets to be sent #####################
-        byteBuffer.putShort(0, packetizer.getTotalPackets());
-
-        DatagramPacket responseDatagram = new DatagramPacket(   byteBuffer.array(), 2,
-                                                                lastPacketAddress, lastPacketPort);
-
-        datagramSocket.send(responseDatagram);
+        packetizer.seekPacket(startPacketID);        
 
         // ##################### Send the packets #####################
 
         byte[] packetToSend = new byte[(int)Protocol.MP3_PACKET_DATA_MAX_SIZE + 2];
-        short nPacket = 0;
+        DatagramPacket responseDatagram = new DatagramPacket(packetToSend, packetToSend.length, lastPacketAddress, lastPacketPort);
+
         int packetLenght;
 
-        while ((packetLenght = packetizer.getNextPacket(packetToSend, 2)) > 0) {
+        while ((startPacketID < endPacketID) && ((packetLenght = packetizer.getNextPacket(packetToSend, 2)) > 0)) {
             // add the data of the nPacket to the index 0 in BigEndian
-            packetToSend[0] = (byte)(nPacket >> 8);
-            packetToSend[1] = (byte)nPacket;
+            packetToSend[0] = (byte)(startPacketID >> 8);
+            packetToSend[1] = (byte)startPacketID;
 
             // set the length of the packet and the data
             responseDatagram.setData(packetToSend, 0, packetLenght + 2);
 
             datagramSocket.send(responseDatagram);
 
-            nPacket++;
+            startPacketID++;
         }   
 
         packetizer.close();
-        
     }
 
-    // OPTIMIZATION: Specific packet request could be optimized keeping the packetizer open
-    //  to not re-open the file for each request (optimized with the clientID)
-    public void responseMP3Packet(String filename, int packetID) throws IOException {
-        // ##################### Send the packets #####################
+    public void responseNPacketsOfSong(String filename) throws IOException {
+        // #####################  Send the total packets to be sent #####################
         Packetizer packetizer = new Packetizer((int)Protocol.MP3_PACKET_DATA_MAX_SIZE);
         packetizer.setFile(filename);
+        short nPackets = packetizer.getTotalPackets();
 
-        byte[] packetToSend = new byte[(int)Protocol.MP3_PACKET_DATA_MAX_SIZE + 2];
-        int packetLenght;
+        byte[] byteBuffer = new byte[2];
+        byteBuffer[0] = (byte)(nPackets >> 8);
+        byteBuffer[1] = (byte)(nPackets & 0xFF);
 
-        packetLenght = packetizer.getNthPacket(packetID, packetToSend, 2);
-        // add the data of the nPacket to the index 0 in BigEndian
-        packetToSend[0] = (byte)(packetID >> 8);
-        packetToSend[1] = (byte)packetID;
-
-        DatagramPacket responseDatagram = new DatagramPacket(packetToSend, packetLenght + 2, lastPacketAddress, lastPacketPort);
-        responseDatagram.setData(packetToSend);
-        responseDatagram.setLength(packetLenght);
+        DatagramPacket responseDatagram = new DatagramPacket(   byteBuffer, 2,
+                                                                lastPacketAddress, lastPacketPort);
 
         datagramSocket.send(responseDatagram);
-
-        packetizer.close();
     }
     
 }

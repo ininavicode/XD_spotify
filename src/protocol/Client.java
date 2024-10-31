@@ -68,25 +68,22 @@ public class Client {
      */
     public void RequestReceiveMP3(Song song, String filename) throws IOException {
         // request (start) ++++++++++++++++++++++++++++++++
+
+        RequestNPacketsOfSong(song);
+        short nPacketsToReceive;
+
+        socket.setSoTimeout(20);    // 20 ms timeout
+
+        while (true) { 
+            try {
+                nPacketsToReceive = ReceiveNPacketsOfSong();    // 20 ms timeout
+                break;
+                
+            } catch (SocketTimeoutException e) {
+                
+            }
+        }
         
-        // | byte index | data             |
-        // | ---------- | ---------------- |
-        // | 0          | command type     |
-        // | 1...1500   | name of the song |
-        byte[] encodedString = song.toByteRaw();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(1 + encodedString.length);
-        
-        byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_REQUEST.value);
-        byteBuffer.put(1, encodedString);
-        
-        // create the datagram
-        DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
-                                                            byteBuffer.array().length,
-                                                            serverAddress,
-                                                            serverPort);
-                                                            
-        // send the request
-        socket.send(requestDatagram);
         // request (end)   --------------------------------
 
         // receive (start) ++++++++++++++++++++++++++++++++
@@ -103,19 +100,6 @@ public class Client {
         byte[] buffer = new byte[1500];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
-        // TODO: Implement the timeout
-        // Receive the response from the server
-        socket.receive(responseDatagram);
-
-        // | byte index | data      |
-        // | ---------- | --------- |
-        // | 0...1      | n packets |
-
-        byteBuffer = ByteBuffer.allocate(responseDatagram.getLength());
-        byteBuffer.put(0, responseDatagram.getData(), 0, responseDatagram.getLength()); // get the data from the datagram
-
-        short nPacketsToReceive = byteBuffer.getShort(0);   // get the n packets to receive
-
         // Step 1.2
         // reserve space for n packets of Protocol.MP3_PACKET_DATA_MAX_SIZE 
         byte[][] packetsList = new byte[nPacketsToReceive][(int)Protocol.MP3_PACKET_DATA_MAX_SIZE];
@@ -124,9 +108,16 @@ public class Client {
         }
 
         // Step 2
-        socket.setSoTimeout(500); // 500 ms timeout
+        socket.setSoTimeout(20); // 20 ms timeout
         short receivedCount = 0;
         boolean endReceiving = false;
+
+        short streamReceivedCount = 0;
+        int nStream = 0;
+
+        final short streamSize = 1000;
+        RequestMP3PacketRange((short)0, (short)streamSize, song);
+
         while (!endReceiving) {
             try {
                 socket.receive(responseDatagram);
@@ -136,23 +127,50 @@ public class Client {
 
                 if (packetsList[packetID] == null) {
                     receivedCount++;
+                    streamReceivedCount++;
                     // copy the data of the mp3 packet
                     packetsList[packetID] = Arrays.copyOfRange(responseDatagram.getData(), 2, responseDatagram.getLength());
                 }
 
-                if (receivedCount == nPacketsToReceive) {
+                if (receivedCount >= nPacketsToReceive) {
                     endReceiving = true;
+                }
+                else if (streamReceivedCount >= 1000) {
+                    streamReceivedCount = 0;
+                    nStream++;
+                    // request the next 1000 packets
+                    RequestMP3PacketRange((short)(nStream * streamSize), (short)((nStream + 1) * streamSize), song);
+
                 }
                 
                 
             } catch (SocketTimeoutException e) {
                 // if timeout, request the remaining packets and keep receiving
-               
-                for (int i = 0; i < packetsList.length; i++) {
-                    if (packetsList[i] == null) {
-                        // request a certain packet
-                        RequestMP3Packet((short)i, song);
+                // {null, 1, 1, null, null}
+                short startID = (short)(nStream * streamSize), endID;
+                boolean end = false;
+
+                short streamEnd = (short)((nStream + 1) * streamSize);
+
+                while (!end) {
+
+                    while (!end && (packetsList[startID] != null)) {
+                        startID++;
+                        if (startID >= streamEnd) end = true;
                     }
+    
+                    endID = (short)(startID + 1);
+                    if (endID >= packetsList.length) end = true;
+    
+                    while (!end && (packetsList[endID] == null)) {
+                        endID++;
+                        if (endID >= streamEnd) end = true;
+                    }
+    
+                    if (startID < streamEnd) RequestMP3PacketRange(startID, endID, song);
+                    
+
+                    startID = endID;
                 }
                 
             }
@@ -174,20 +192,23 @@ public class Client {
     }    
 
 
-    private void RequestMP3Packet(short packetID, Song song) throws IOException {
+    private void RequestMP3PacketRange(short startPacketID, short endPacketID, Song song) throws IOException {
 
-        // | byte index | data         |
-        // | ---------- | ------------ |
-        // | 0          | command type |
-        // | 1...2      | packet id    |
-        // | 3...1500   | song name    |
 
+        // | byte index | data                         |
+        // | ---------- | ---------------------------- |
+        // | 0          | command type                 |
+        // | 1...2      | packet id start (included)   |
+        // | 3...4      | packet id end (not included) |
+        // | 5...1500   | song name                    |
+        
         byte[] encodedString = song.toByteRaw();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(3 + encodedString.length);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(5 + encodedString.length);
 
-        byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_PACKET_REQUEST.value);
-        byteBuffer.putShort(1, packetID);
-        byteBuffer.put(3, encodedString);
+        byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_PACKETS_RANGE_REQUEST.value);
+        byteBuffer.putShort(1, startPacketID);
+        byteBuffer.putShort(3, endPacketID);
+        byteBuffer.put(5, encodedString);
 
         // create the datagram
         DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
@@ -199,15 +220,46 @@ public class Client {
         socket.send(requestDatagram);
     }
 
+    private void RequestNPacketsOfSong(Song song) throws IOException {
+        // | byte index | data             |
+        // | ---------- | ---------------- |
+        // | 0          | command type     |
+        // | 1...1500   | name of the song |
+        
+        byte[] encodedString = song.toByteRaw();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1 + encodedString.length);
+        
+        byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_N_PACKETS_REQUEST.value);
+        byteBuffer.put(1, encodedString);
+        
+        // create the datagram
+        DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
+                                                            byteBuffer.array().length,
+                                                            serverAddress,
+                                                            serverPort);
+                                                            
+        // send the request
+        socket.send(requestDatagram);
+    }
+
     // ##################### receiving #####################
     public Protocol.ResponseSearchEngine_t ReceiveSearchEngine() throws IOException {
         // Preparem per rebre la resposta del servidor
         byte[] buffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
-        // TODO: Implement the timeout
         // Receive the response from the server
-        socket.receive(responseDatagram);
+        socket.setSoTimeout(20);    // 20 ms timeout
+        while (true) { 
+            try {
+                socket.receive(responseDatagram);
+                socket.setSoTimeout(0);    // disable the timeout
+                break;
+                
+            } catch (SocketTimeoutException e) {
+                
+            }
+        }
 
         // | byte index | data                                      |
         // | ---------- | ----------------------------------------- |
@@ -226,5 +278,28 @@ public class Client {
 
         return response;
     }
+
+
+    /**
+     * 
+     * @return The packets of the requested song with RequestNPacketsOfSong
+     * @throws IOException
+     */
+    private short ReceiveNPacketsOfSong() throws IOException, SocketTimeoutException {
+        byte[] buffer = new byte[2];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
+        DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
+
+        // Receive the response from the server
+        socket.receive(responseDatagram);
+
+        // | byte index | data      |
+        // | ---------- | --------- |
+        // | 0...1      | n packets |
+
+        short output = (short)((responseDatagram.getData()[0] << 8) | (responseDatagram.getData()[1] & 0xFF));
+
+        return output;
+    }
+   
     
 }

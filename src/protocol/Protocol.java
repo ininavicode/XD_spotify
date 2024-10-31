@@ -16,8 +16,8 @@ public class Protocol {
 
         INVALID_COMMAND((byte)0),
         SEARCH_ENGINE_REQUEST((byte)1),
-        SONG_MP3_REQUEST((byte)2),
-        SONG_MP3_PACKET_REQUEST((byte)3);
+        SONG_MP3_PACKETS_RANGE_REQUEST((byte)3),
+        SONG_MP3_N_PACKETS_REQUEST((byte)4);
         
         private COMMAND_TYPE(byte value) {
             this.value = value;
@@ -27,8 +27,9 @@ public class Protocol {
         
         public static COMMAND_TYPE fromByte(byte value) {
             if (value == SEARCH_ENGINE_REQUEST.value) return SEARCH_ENGINE_REQUEST;
-            else if (value == SONG_MP3_REQUEST.value) return SONG_MP3_REQUEST;
-            else if (value == SONG_MP3_PACKET_REQUEST.value) return SONG_MP3_PACKET_REQUEST;
+            // else if (value == SONG_MP3_REQUEST.value) return SONG_MP3_REQUEST;
+            else if (value == SONG_MP3_PACKETS_RANGE_REQUEST.value) return SONG_MP3_PACKETS_RANGE_REQUEST;
+            else if (value == SONG_MP3_N_PACKETS_REQUEST.value) return SONG_MP3_N_PACKETS_REQUEST;
             else return INVALID_COMMAND;
             
         }
@@ -70,35 +71,4 @@ public class Protocol {
 
     // ##################### MP3 #####################
  
-
-    // ##################### MP3 Packet #####################
-
-    public static class RequestMP3Packet_t {
-        public short packetID;
-        public String songName;
-
-        public RequestMP3Packet_t(short packetID, String songName) {
-            this.packetID = packetID;
-            this.songName = songName;
-        }
-
-        public RequestMP3Packet_t() {
-
-        }
-    }
-
-    public static class ReceiveMP3Packet_t {
-        public short packetID;
-        public byte[] data;
-
-        public ReceiveMP3Packet_t(short packetID, byte[] data) {
-            this.packetID = packetID;
-            this.data = data;
-        }
-
-        public ReceiveMP3Packet_t() {
-
-        }
-    }
-
 }

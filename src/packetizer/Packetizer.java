@@ -59,6 +59,12 @@ public class Packetizer {
         return true;
     }
 
+    public void seekPacket(short nPacket) throws IOException {
+        // Calculate the byte offset
+        long offset = (long) nPacket * packetsSize;
+        fileInputStream.getChannel().position(offset);
+    }
+
     // ##################### getters #####################
 
     public short getTotalPackets() {
@@ -96,6 +102,7 @@ public class Packetizer {
      * @param off : The initial posistion where the data will be stored at the packetOutput
      * @return The size of the packet (at the end of the file, this may be less than "packetsSize"). Returns -1 if there is no more data in the file.
      */
+    @Deprecated
     public int getNthPacket(int n, byte[] packetOutput, int off) {
         if (fileInputStream == null || packetOutput == null || packetOutput.length < (packetsSize + off)) {
             throw new IllegalArgumentException("Invalid file stream or packetOutput buffer size.");

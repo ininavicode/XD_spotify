@@ -23,8 +23,8 @@ public class ClientMain {
         // System.out.print("\n");
 
         // ##################### REQUEST MP3 #####################
-        client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/str_rec.txt");  // request a text test file
-        // FIXME: It seems like there is lost data on the first 1000 packets, just before the specific packet request start happenning,
+        // client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/str_rec.txt");  // request a text test file
+        // FIXED: It seems like there is lost data on the first 1000 packets, just before the specific packet request start happenning,
         //  Any packet received after the use of the specific packet request is correctly pasrse, thougth, the received song is reproduced
         //  perfectly skipping the initial seconds. The str file is parsed with fails, for example at the line 623 of the str_rec.txt
         //  is notable that there is a lack or excess of "\n" at some point
@@ -33,7 +33,7 @@ public class ClientMain {
         // -rw-r--r-- 1 javi javi 4173201 Oct 31 08:46 str_rec.txt
         // -rw-r--r-- 1 javi javi 4175999 Oct 31 08:44 tosend.txt
 
-        // client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
+        client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
         // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
     }
 }
