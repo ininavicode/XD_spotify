@@ -84,7 +84,8 @@ public class Server {
 
         // ############ SEARCH_ENGINE_REQUEST ############
         // ############ SONG_MP3_PACKET_REQUEST ############
-        else if (lastPacketCommandType == Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST) {
+        else if (   lastPacketCommandType == Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST ||
+                    lastPacketCommandType == Protocol.COMMAND_TYPE.SONG_MP3_PACKET_REQUEST) {
             encodedStr = new byte[lastPacketData.length - 2];
             lastPacketByteBuffer.get(2, encodedStr, 0, encodedStr.length);
 

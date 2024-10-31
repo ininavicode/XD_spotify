@@ -41,7 +41,8 @@ public class ServerMain {
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
                     System.out.print("\nPacket ID: " + server.getLastPacket_PacketID());
 
-                    server.responseMP3Packet("data/tosend.txt", server.getLastPacket_PacketID());
+                    server.responseMP3Packet("data/tosend.txt", server.getLastPacket_PacketID());   // send a text test file
+                    // server.responseMP3Packet("data/song.mp3", server.getLastPacket_PacketID());  // send the mp3
 
                     break;
                 default:
