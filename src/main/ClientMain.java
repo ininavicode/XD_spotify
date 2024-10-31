@@ -24,10 +24,10 @@ public class ClientMain {
 
         // ##################### REQUEST MP3 #####################
         client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/str_rec.txt");  // request a text test file
-        // FIXME: The request of specific packets start happenning arround 2000 packets to send. If this type of request is not used
-        //  the file arrives perfectly, but when this is needed, the parsed file is incorrect
-        // The original file has 2000 more bytes than the received, so there migth be data loss at the use of this request
-        // For files with less than 1000, the packet specific request does not happen, and the parsed file is exactly the expected
+        // FIXME: It seems like there is lost data on the first 1000 packets, just before the specific packet request start happenning,
+        //  Any packet received after the use of the specific packet request is correctly pasrse, thougth, the received song is reproduced
+        //  perfectly skipping the initial seconds. The str file is parsed with fails, for example at the line 623 of the str_rec.txt
+        //  is notable that there is a lack or excess of "\n" at some point
         // -rw-r--r-- 1 javi javi 8952125 Oct 21 09:38 song.mp3
         // -rw-r--r-- 1 javi javi 8950291 Oct 31 08:30 song_rec.mp3
         // -rw-r--r-- 1 javi javi 4173201 Oct 31 08:46 str_rec.txt
