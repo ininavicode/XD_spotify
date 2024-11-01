@@ -18,6 +18,12 @@ public class ServerMain {
 
             System.out.print("\nCommand type: " + commandType.name());
 
+            // TODO: Add the nested class PACKET into the server, so each time the server
+            //  gets a packet, all the info is saved there.
+            // There should be as many sub-types of packets as request types, so the server saves an
+            //  instance of the proper packet sub-class to the last packet property.
+            // The last packet property should be accessible with a method but not modified, so it is
+            //  necessary to implement getters for the packet sub-class.
             switch (commandType) {
                 case SEARCH_ENGINE_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
@@ -28,13 +34,13 @@ public class ServerMain {
                     );
 
                     System.out.print("\nSending response to client");
-                    server.ResponseSearchEngine(new Protocol.ResponseSearchEngine_t((short)1, searchEngineByPassResponse));
+                    server.responseSearchEngine(new Protocol.ResponseSearchEngine_t((short)1, searchEngineByPassResponse));
 
                     break;
                 case SONG_MP3_N_PACKETS_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
 
-                    server.responseNPacketsOfSong("data/song.mp3");
+                    server.responseFilePacketsSize("data/song.mp3");
 
                     break;
                 case SONG_MP3_PACKETS_RANGE_REQUEST:
@@ -42,7 +48,7 @@ public class ServerMain {
                     System.out.print("\nStart Packet ID: " + server.getLastPacket_StartPacketID());
                     System.out.print("\nEnd Packet ID: " + server.getLastPacket_EndPacketID());
 
-                    server.responseMP3PacketRange("data/song.mp3", server.getLastPacket_StartPacketID(), server.getLastPacket_EndPacketID());  // send the mp3
+                    server.responseFilePacketsRange("data/song.mp3", server.getLastPacket_StartPacketID(), server.getLastPacket_EndPacketID());  // send the mp3
 
                     break;
 

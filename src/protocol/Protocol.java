@@ -9,8 +9,7 @@ import song.*;
 
 public class Protocol {
     public static final long DATAGRAM_MAX_SIZE = 1500;
-    public static  final long MP3_PACKET_DATA_MAX_SIZE = 1450; // 1500 - 50
-    public static  final long DATAGRAM_DATA_MAX_SIZE = 1453; // 1500 - 50 + commandType.lenght + packetID.length
+    public static  final long PACKET_DATA_MAX_SIZE = 1450; // 1500 - 50
 
     public static enum COMMAND_TYPE {
 
@@ -41,19 +40,6 @@ public class Protocol {
      */
 
     // ##################### SearchEngine #####################
-    public static class RequestSearchEngine_t {
-        public short clientID;              // 2 bytes
-        public String nameToSearch;         // rest of bytes
-
-        public RequestSearchEngine_t(short clientID, String nameToSearch) {
-            this.clientID = clientID;
-            this.nameToSearch = nameToSearch;
-        }
-
-        public RequestSearchEngine_t() {
-
-        }
-    }
 
     public static class ResponseSearchEngine_t {
         public short clientID;         // 2 bytes    

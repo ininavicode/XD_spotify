@@ -13,7 +13,7 @@ public class ClientMain {
         System.in.read();
         
         // ##################### REQUEST SEARCH ENGINE #####################
-        // client.RequestSearchEngine(new RequestSearchEngine_t((short)-1, "Tomame o dejame Naiara"));
+        // client.RequestSearchEngine("Tomame o dejame Naiara", (short)-1);
 
         // System.out.print("\nWaiting for server response");
         // Protocol.ResponseSearchEngine_t response = client.ReceiveSearchEngine();
@@ -33,7 +33,7 @@ public class ClientMain {
         // -rw-r--r-- 1 javi javi 4173201 Oct 31 08:46 str_rec.txt
         // -rw-r--r-- 1 javi javi 4175999 Oct 31 08:44 tosend.txt
 
-        client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
+        client.requestReceiveFile(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
         // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
     }
 }

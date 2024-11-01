@@ -36,17 +36,32 @@ public class Client {
 
     // ##################### requests #####################
 
-    public void RequestSearchEngine(Protocol.RequestSearchEngine_t request) throws IOException {
-        // | byte index | data                          |
-        // | ---------- | ----------------------------- |
-        // | 0          | command_type                  |
-        // | 1...2      | client ID (signed 2 byte int) |
-        // | 3...1500   | name to search                |
+    /**
+     * This method executes a request to the server to receive a song list with the method receiveSearchEngine,
+     * expecting the results of the search engine in function of the given request to this method.
+     * This method is used to stablish session too, with the clientID
+     * @param clientID
+     * @param nameToSearch : String that will arrive to the search engine (nameToSearch.getBytes().length <= 1450)
+     * @throws IOException
+     * @throws IllegalArgumentException : If (nameToSearch.getBytes().length > 1450) 
+     * 
+     */
+    public void requestSearchEngine(String nameToSearch, short clientID) throws IOException, IllegalArgumentException {
+        // | byte index     | data                          |
+        // | -------------- | ----------------------------- |
+        // | 0              | command_type                  |
+        // | 1...2          | client ID (signed 2 byte int) |
+        // | 3...3+1450-1   | name to search                |
 
-        byte[] encodedString = request.nameToSearch.getBytes();
+        byte[] encodedString = nameToSearch.getBytes();
+
+        if (encodedString.length > 1450) {
+            throw new IllegalArgumentException("nameToSearch length exceeded");
+        }
+
         ByteBuffer byteBuffer = ByteBuffer.allocate(3 + encodedString.length);
         byteBuffer.put(3, encodedString);                                   // add the encoded string
-        byteBuffer.putShort(1, request.clientID);                           // add the session ID
+        byteBuffer.putShort(1, clientID);                           // add the session ID
         byteBuffer.put(0, Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST.value);  // add the command type
         
         // create the datagram
@@ -61,27 +76,33 @@ public class Client {
 
     /**
      * This method creates a new file with the given filename
-     * The method sends a request to the server to get the given song, so the client expects a stream of packets containing
-     *  the data of the specifyied song at the request
      * @param filename : Name of the file to create -> "filename"
-     * @param song : Song requested at previous RequestMP3
+     * @param song : Song to request to the server
+     * @return True if the requested song exists. False if not.
+     * @pre At this version, the file to receive can not be longer than (2^16 * 1450 B = 95.02 MB), due the 
+     * limitation of 2 bytes for packetID (max for packetID = 2^16 different values)
      */
-    public void RequestReceiveMP3(Song song, String filename) throws IOException {
+    public boolean requestReceiveFile(Song song, String filename) throws IOException {
         // request (start) ++++++++++++++++++++++++++++++++
 
-        RequestNPacketsOfSong(song);
+        requestFilePacketsSize(song);
         short nPacketsToReceive;
 
         socket.setSoTimeout(20);    // 20 ms timeout
 
         while (true) { 
             try {
-                nPacketsToReceive = ReceiveNPacketsOfSong();    // 20 ms timeout
+                nPacketsToReceive = receiveFilePacketsSize();    // 20 ms timeout
                 break;
                 
             } catch (SocketTimeoutException e) {
                 
             }
+        }
+
+        // if the packet responses with 0, that means that the requested song does not exist
+        if (nPacketsToReceive == 0) {
+            return false;
         }
         
         // request (end)   --------------------------------
@@ -97,12 +118,12 @@ public class Client {
         // 3. Once the timeout is on, check if all the packets at the list are not null, if any packet is null,
         //  request it to the server
 
-        byte[] buffer = new byte[1500];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
+        byte[] buffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
         // Step 1.2
-        // reserve space for n packets of Protocol.MP3_PACKET_DATA_MAX_SIZE 
-        byte[][] packetsList = new byte[nPacketsToReceive][(int)Protocol.MP3_PACKET_DATA_MAX_SIZE];
+        // reserve space for n packets of Protocol.PACKET_DATA_MAX_SIZE bytes
+        byte[][] packetsList = new byte[nPacketsToReceive][(int)Protocol.PACKET_DATA_MAX_SIZE];
         for (int i = 0; i < nPacketsToReceive; i++) { // A for each cannot be used as copies to the values are accessed, instead of the references.
             packetsList[i] = null;
         }
@@ -115,8 +136,9 @@ public class Client {
         short streamReceivedCount = 0;
         int nStream = 0;
 
+        // OPTIMIZATION: Analize streamSize
         final short streamSize = 1000;
-        RequestMP3PacketRange((short)0, (short)streamSize, song);
+        requestFilePacketsRange((short)0, (short)streamSize, song);
 
         while (!endReceiving) {
             try {
@@ -139,7 +161,7 @@ public class Client {
                     streamReceivedCount = 0;
                     nStream++;
                     // request the next 1000 packets
-                    RequestMP3PacketRange((short)(nStream * streamSize), (short)((nStream + 1) * streamSize), song);
+                    requestFilePacketsRange((short)(nStream * streamSize), (short)((nStream + 1) * streamSize), song);
 
                 }
                 
@@ -167,7 +189,7 @@ public class Client {
                         if (endID >= streamEnd) end = true;
                     }
     
-                    if (startID < streamEnd) RequestMP3PacketRange(startID, endID, song);
+                    if (startID < streamEnd) requestFilePacketsRange(startID, endID, song);
                     
 
                     startID = endID;
@@ -188,11 +210,12 @@ public class Client {
 
         fileFromPacket.close();
 
-
+        // notify that the file was parsed succesfully
+        return true;
     }    
 
 
-    private void RequestMP3PacketRange(short startPacketID, short endPacketID, Song song) throws IOException {
+    private void requestFilePacketsRange(short startPacketID, short endPacketID, Song song) throws IOException {
 
 
         // | byte index | data                         |
@@ -220,7 +243,7 @@ public class Client {
         socket.send(requestDatagram);
     }
 
-    private void RequestNPacketsOfSong(Song song) throws IOException {
+    private void requestFilePacketsSize(Song song) throws IOException {
         // | byte index | data             |
         // | ---------- | ---------------- |
         // | 0          | command type     |
@@ -243,7 +266,7 @@ public class Client {
     }
 
     // ##################### receiving #####################
-    public Protocol.ResponseSearchEngine_t ReceiveSearchEngine() throws IOException {
+    public Protocol.ResponseSearchEngine_t receiveSearchEngine() throws IOException {
         // Preparem per rebre la resposta del servidor
         byte[] buffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
@@ -282,10 +305,10 @@ public class Client {
 
     /**
      * 
-     * @return The packets of the requested song with RequestNPacketsOfSong
+     * @return The packets of the requested song with requestFilePacketsSize
      * @throws IOException
      */
-    private short ReceiveNPacketsOfSong() throws IOException, SocketTimeoutException {
+    private short receiveFilePacketsSize() throws IOException, SocketTimeoutException {
         byte[] buffer = new byte[2];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 

@@ -152,7 +152,7 @@ public class Server {
     }
 
     // ##################### responses #####################
-    public void ResponseSearchEngine(Protocol.ResponseSearchEngine_t response) throws IOException {
+    public void responseSearchEngine(Protocol.ResponseSearchEngine_t response) throws IOException {
         byte[] encodedSongList = SongList.toByteRaw(response.songList);
 
         ByteBuffer responseBuffer = ByteBuffer.allocate(encodedSongList.length + 2);    // data + clientID
@@ -172,15 +172,15 @@ public class Server {
     /**
      * The range of packets [startPacketID, endPacketID) of the given filename, is sent to the client 
      */
-    public void responseMP3PacketRange(String filename, short startPacketID, short endPacketID) throws IOException {
+    public void responseFilePacketsRange(String filename, short startPacketID, short endPacketID) throws IOException {
 
-        Packetizer packetizer = new Packetizer((int)Protocol.MP3_PACKET_DATA_MAX_SIZE);
+        Packetizer packetizer = new Packetizer((int)Protocol.PACKET_DATA_MAX_SIZE);
         packetizer.setFile(filename);
         packetizer.seekPacket(startPacketID);        
 
         // ##################### Send the packets #####################
 
-        byte[] packetToSend = new byte[(int)Protocol.MP3_PACKET_DATA_MAX_SIZE + 2];
+        byte[] packetToSend = new byte[(int)Protocol.PACKET_DATA_MAX_SIZE + 2];
         DatagramPacket responseDatagram = new DatagramPacket(packetToSend, packetToSend.length, lastPacketAddress, lastPacketPort);
 
         int packetLenght;
@@ -201,12 +201,27 @@ public class Server {
         packetizer.close();
     }
 
-    public void responseNPacketsOfSong(String filename) throws IOException {
+    /**
+     * If the filename exists, the server sends a message to the client with the total size (in packets of PACKET_DATA_MAX_SIZE)
+     *  of the given filename.
+     * If the filename does not exist, the server sends 0
+     * @param filename
+     * @throws IOException
+     */
+    public void responseFilePacketsSize(String filename) throws IOException {
         // #####################  Send the total packets to be sent #####################
-        Packetizer packetizer = new Packetizer((int)Protocol.MP3_PACKET_DATA_MAX_SIZE);
-        packetizer.setFile(filename);
-        short nPackets = packetizer.getTotalPackets();
+        Packetizer packetizer = new Packetizer((int)Protocol.PACKET_DATA_MAX_SIZE);
 
+        short nPackets;
+
+        if (packetizer.setFile(filename)) {
+            nPackets = packetizer.getTotalPackets();
+        }
+        else {
+            // the file does not exist
+            nPackets = 0;
+        }
+        
         byte[] byteBuffer = new byte[2];
         byteBuffer[0] = (byte)(nPackets >> 8);
         byteBuffer[1] = (byte)(nPackets & 0xFF);
