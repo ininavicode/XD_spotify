@@ -42,12 +42,12 @@ public class Protocol {
     // ##################### SearchEngine #####################
 
     public static class ResponseSearchEngine_t {
-        public short clientID;         // 2 bytes    
+        public long cookie;                 // 8 bytes  
         public ArrayList<Song> songList;    // rest of bytes (10 songs)
 
-        public ResponseSearchEngine_t(short clientID, ArrayList<Song> songList) {
-            this.clientID = clientID;
+        public ResponseSearchEngine_t(long cookie, ArrayList<Song> songList) {
             this.songList = songList;
+            this.cookie = cookie;
         }
 
         public ResponseSearchEngine_t() {

@@ -40,18 +40,17 @@ public class Client {
      * This method executes a request to the server to receive a song list with the method receiveSearchEngine,
      * expecting the results of the search engine in function of the given request to this method.
      * This method is used to stablish session too, with the clientID
-     * @param clientID
      * @param nameToSearch : String that will arrive to the search engine (nameToSearch.getBytes().length <= 1450)
      * @throws IOException
      * @throws IllegalArgumentException : If (nameToSearch.getBytes().length > 1450) 
      * 
      */
-    public void requestSearchEngine(String nameToSearch, short clientID) throws IOException, IllegalArgumentException {
+    public void requestSearchEngine(String nameToSearch, long cookie) throws IOException, IllegalArgumentException {
         // | byte index     | data                          |
         // | -------------- | ----------------------------- |
         // | 0              | command_type                  |
-        // | 1...2          | client ID (signed 2 byte int) |
-        // | 3...3+1450-1   | name to search                |
+        // | 1...8          | cookie                        |
+        // | 9...9+1450-1   | name to search                |
 
         byte[] encodedString = nameToSearch.getBytes();
 
@@ -59,10 +58,10 @@ public class Client {
             throw new IllegalArgumentException("nameToSearch length exceeded");
         }
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate(3 + encodedString.length);
-        byteBuffer.put(3, encodedString);                                   // add the encoded string
-        byteBuffer.putShort(1, clientID);                           // add the session ID
-        byteBuffer.put(0, Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST.value);  // add the command type
+        ByteBuffer byteBuffer = ByteBuffer.allocate(9 + encodedString.length);
+        byteBuffer.put(9, encodedString);                                       // add the encoded string
+        byteBuffer.putLong(1, cookie);                                          // add the session ID
+        byteBuffer.put(0, Protocol.COMMAND_TYPE.SEARCH_ENGINE_REQUEST.value);   // add the command type
         
         // create the datagram
         DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
@@ -239,7 +238,7 @@ public class Client {
                                                             serverAddress,
                                                             serverPort);
 
-        // Enviem el paquet al servidor
+        // Send the packet to server.
         socket.send(requestDatagram);
     }
 
@@ -284,19 +283,19 @@ public class Client {
             }
         }
 
-        // | byte index | data                                      |
-        // | ---------- | ----------------------------------------- |
-        // | 0...1      | client ID assignement (signed 2 byte int) |
-        // | 2...1500   | results of the search (10 songs)          |
+        // | byte index | data                             |
+        // | ---------- | -------------------------------- |
+        // | 0 .. 7     | cookie                           |
+        // | 7 .. 1500  | results of the search (10 songs) |
 
         ByteBuffer byteBuffer = ByteBuffer.allocate(responseDatagram.getLength());
         byteBuffer.put(0, responseDatagram.getData(), 0, responseDatagram.getLength()); // get the data from the datagram
 
         Protocol.ResponseSearchEngine_t response = new Protocol.ResponseSearchEngine_t();
 
-        response.clientID = byteBuffer.getShort(0);
-        byte[] songsStr = new byte[responseDatagram.getLength() - 2];   // parse the 10 songs
-        byteBuffer.get(2, songsStr);                                    // ...
+        response.cookie = byteBuffer.getLong(0);
+        byte[] songsStr = new byte[responseDatagram.getLength() - 8];   // parse the 10 songs
+        byteBuffer.get(8, songsStr);                                    // ...
         response.songList = SongList.fromByteRaw(songsStr);             // ...
 
         return response;

@@ -13,14 +13,27 @@ public class ClientMain {
         System.in.read();
         
         // ##################### REQUEST SEARCH ENGINE #####################
-        // client.RequestSearchEngine("Tomame o dejame Naiara", (short)-1);
+        client.requestSearchEngine("F", -1L); // Initially, cookie is -1 to check for a new one.
 
-        // System.out.print("\nWaiting for server response");
-        // Protocol.ResponseSearchEngine_t response = client.ReceiveSearchEngine();
+        System.out.println("\nWaiting for server response");
+        Protocol.ResponseSearchEngine_t response = client.receiveSearchEngine();
 
-        // System.out.print("\nServer response: " + response.songList);
+        System.out.println("RESPONSE RECEIVED\nCookie: " + response.cookie + "\nList:\n" + response.songList);
         
-        // System.out.print("\n");
+        System.out.print("\n");
+
+        System.out.print("\nClick enter to send second request");
+        System.in.read();
+
+        client.requestSearchEngine("Fam", response.cookie); 
+
+        System.out.println("\nWaiting for server response");
+        response = client.receiveSearchEngine();
+
+        System.out.println("RESPONSE RECEIVED\nCookie: " + response.cookie + "\nList:\n" + response.songList);
+        
+        System.out.print("\n");
+
 
         // ##################### REQUEST MP3 #####################
         // client.RequestReceiveMP3(new Song("Song Name", "Author"), "data/str_rec.txt");  // request a text test file
@@ -33,7 +46,7 @@ public class ClientMain {
         // -rw-r--r-- 1 javi javi 4173201 Oct 31 08:46 str_rec.txt
         // -rw-r--r-- 1 javi javi 4175999 Oct 31 08:44 tosend.txt
 
-        client.requestReceiveFile(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
-        // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
+        // client.requestReceiveFile(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
+        // // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
     }
 }
