@@ -1,6 +1,6 @@
 SRC_DIR = src
 BUILD_DIR = build
-MAIN_FILE = main.testMP3Player
+MAIN_FILE = main.testVLCPlayer
 COMPILER_FLAGS = -g
 JLAYER = lib/jlayer-1.0.3.jar
 
