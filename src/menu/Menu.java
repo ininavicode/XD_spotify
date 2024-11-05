@@ -1,0 +1,61 @@
+package menu;
+
+import java.util.List;
+import java.util.ArrayList;
+import song.*;
+
+public class Menu {
+    
+    private static final String SELECTED_MARK = " -> ";  // Marca que se pondrá al lado de la canción seleccionada
+    private List<Song> songs;  // Lista de canciones
+    private int selectedIndex;   // Índice de la canción seleccionada
+
+    public Menu(ArrayList<Song> lista) {
+        this.songs = lista;
+        this.selectedIndex = 0;
+    }
+
+    // Cambiar la canción seleccionada
+    public void selectSong(boolean incremento) {
+        if (selectedIndex > 0 && selectedIndex < songs.size()) {
+            if (incremento) {
+                selectedIndex += 1;
+            } else {
+                selectedIndex -= 1;
+            }
+            
+        }
+    }
+
+    // Método para renderizar el menú
+    public void render() {
+        // Limpiar consola antes de mostrar el nuevo menú
+        clearConsole();
+
+        System.out.println("Lista de Canciones:");
+        for (int i = 0; i < songs.size(); i++) {
+            Song song = songs.get(i);
+            if (i == selectedIndex) {
+                System.out.println(song + SELECTED_MARK);  // Marca la canción seleccionada
+            } else {
+                System.out.println(song);  // Muestra la canción sin la flecha
+            }
+        }
+
+        System.out.println("\nSelecciona una canción con las teclas de dirección o 'q' para salir.");
+    }
+
+    // Función para limpiar la consola (dependiendo del sistema operativo)
+    public void clearConsole() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,3 +1,5 @@
+package keyboard;
+
 public class KeyPressReader {
 
     static {
