@@ -1,14 +1,43 @@
 SRC_DIR = src
 BUILD_DIR = build
+MAIN = Main
+COMPILER_FLAGS = -g
 
-MAIN_FILE = # !!!! ADD FILE WITH MAIN !!!
+# Find all .java files in src
+SOURCES := $(shell find $(SRC_DIR) -name "*.java")
 
+all: compile_java compile_native
 
-all:
-	javac $(SRC_DIR)/$(MAIN_FILE).java -d $(BUILD_DIR)
+compile_java:
+	# Create build directory if it doesn't exist
+	mkdir -p $(BUILD_DIR)
+	# Generate JNI header file for KeyPressReader
+	javac -h $(SRC_DIR)/keyboard/C src/keyboard/KeyPressReader.java
+	# Compile all Java files to the build directory
+	javac $(COMPILER_FLAGS) -d $(BUILD_DIR) $(SOURCES)
+
+compile_native: 
+	# Creating shared library for key_reader.c
+	gcc -shared -o $(SRC_DIR)/keyboard/C/libkey_reader.so -fPIC \
+	    -I/usr/lib/jvm/java-17-openjdk-amd64/include \
+	    -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux \
+	    $(SRC_DIR)/keyboard/C/key_reader.c
 
 run:
-	java -cp $(BUILD_DIR) $(MAIN_FILE) $(IP) $(PORT)
+	# Run the main class with classpath set to the build directory
+	java -Djava.library.path=$(SRC_DIR)/keyboard/C -cp $(BUILD_DIR) $(MAIN)
+
+debug:
+	# Start Java program in debug mode, waiting for debugger to attach on port 5005
+	java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
+	    -Djava.library.path=$(SRC_DIR)/keyboard/C -cp $(BUILD_DIR) $(MAIN)
+
+debug_attach:
+	# Attach jdb to the running process on port 5005
+	jdb -attach 5005
 
 clean:
-	rm -r build/*
+	# Remove all compiled files in the build directory and JNI header
+	rm -rf $(BUILD_DIR)/*
+	rm -f $(SRC_DIR)/keyboard/C/KeyPressReader.h
+	rm -f $(SRC_DIR)/keyboard/C/libkey_reader.so
