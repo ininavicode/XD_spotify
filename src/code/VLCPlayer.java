@@ -2,7 +2,7 @@ package code;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.InputStream;
+import java.io.BufferedReader;
 import java.io.PrintWriter;
 
 public class VLCPlayer {
@@ -14,7 +14,7 @@ public class VLCPlayer {
     Process vlcProcess;               // The instance that will have the process playing.
     OutputStream vlcCommandCons;      // The instance that will permit the manipulation of the VLC reproducer.
     PrintWriter vlcCommandWriter;     // The instance that will manipulate the console operations.
-    InputStream vlcResponse;          // The instance that will hold the responses of the VLC via terminal.
+    BufferedReader vlcResponse;          // The instance that will hold the responses of the VLC via terminal.
     boolean actuallyPlaying;          // The instance that controls whether the music is being or not being played.
                                       // There would be no problems if pause() is called when the song is pauses, it will continue its reproduction,
                                       // but to make things cohesive and understandable, pause() method will only pause the song.
@@ -31,9 +31,8 @@ public class VLCPlayer {
             vlcProcess = vlcProcessBuilder.start();
             actuallyPlaying = true;
             vlcCommandCons = vlcProcess.getOutputStream();
-            vlcResponse = vlcProcess.getInputStream();
-            flush();
-            vlcCommandWriter = new PrintWriter(vlcCommandCons, true); // Autoflush to true, for each command, flush the stream for future input.
+            vlcResponse = vlcProcess.inputReader();
+            vlcCommandWriter = new PrintWriter(vlcCommandCons, false); // Autoflush to true, for each command, flush the stream for future input.
         } 
         catch(IOException exc) {
            exc.printStackTrace();
@@ -48,7 +47,6 @@ public class VLCPlayer {
         if(actuallyPlaying) {
             vlcCommandWriter.println("pause");
             actuallyPlaying = false;
-            flush();
         }
     }
 
@@ -59,7 +57,6 @@ public class VLCPlayer {
         if(!actuallyPlaying) {
             vlcCommandWriter.println("play");
             actuallyPlaying = true;
-            flush();
         }
     }
     
@@ -70,7 +67,6 @@ public class VLCPlayer {
      */
     public void goToInSeconds(int sec) {
         vlcCommandWriter.println("seek " + sec);
-        flush();
     }
 
     /**
@@ -82,13 +78,11 @@ public class VLCPlayer {
         int numSec = -1;
         try {
             vlcCommandWriter.println("get_time");
-            Thread.sleep(10); // wait for the response in the buffer to be loaded.
-            int available = vlcResponse.available();
-            byte[] info = new byte[available];
-            vlcResponse.read(info, 0, available);
-            String temp = new String(info);
-            numSec = Integer.parseInt(temp.substring(0, temp.lastIndexOf('>') - 1).trim()); // +2 to eliminate "> " and -1 to eliminate "\n".
-            flush();
+            Thread.sleep(1000);
+            System.out.println(vlcResponse.readLine());
+            System.out.println(vlcResponse.readLine());
+            String temp = vlcResponse.readLine();
+            numSec = Integer.parseInt(temp.substring(temp.indexOf('>') + 2));
         }
         catch(IOException | InterruptedException exc) {
             exc.printStackTrace();
@@ -104,16 +98,15 @@ public class VLCPlayer {
     public int getTotalTime() {
         int numSec = -1;
         try {
-            vlcCommandWriter.println("get_length");
-            Thread.sleep(10); // wait for the response in the buffer to be loaded.
-            int available = vlcResponse.available();
-            byte[] info = new byte[available];
-            vlcResponse.read(info, 0, available);
-            String temp = new String(info);
-            numSec = Integer.parseInt(temp.substring(0, temp.lastIndexOf('>') - 1).trim()); // +2 to eliminate "> " and -1 to eliminate "\n".
-            flush();
+            vlcCommandWriter.println("get_time");
+            System.out.println(vlcResponse);
+            vlcResponse.readLine();
+            vlcResponse.readLine();
+            System.out.println(vlcResponse);
+            String temp = vlcResponse.readLine();
+            numSec = Integer.parseInt(temp.substring(temp.indexOf('>') + 2));
         }
-        catch(IOException | InterruptedException exc) {
+        catch(IOException exc) {
             exc.printStackTrace();
         }
         return numSec;
@@ -123,28 +116,13 @@ public class VLCPlayer {
      * Method that advances the song in 10 seconds.
      */
     public void advance10Seconds() {
-        goToInSeconds(getActualTime() + 10);
+        vlcCommandWriter.println("seek +10");
     }
 
     /**
      * Method that make the song go back by 10 seconds.
      */
     public void goBack10Seconds() {
-        goToInSeconds(getActualTime() - 10);
-    }
-
-    /**
-     * Method that flushed the entry.
-     */
-    private void flush() {
-        try {
-            Thread.sleep(10); // Take some time for the buffer to be completely charged.
-            while(vlcResponse.available() > 0) { // While it has data ...
-                vlcResponse.read();              // ... read the bytes.
-            }
-        }
-        catch(IOException | InterruptedException exc) {
-            exc.printStackTrace();
-        }
+        vlcCommandWriter.println("seek -10");
     }
 }

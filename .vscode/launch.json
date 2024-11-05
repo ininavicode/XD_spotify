@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Tutorial",
+            "request": "launch",
+            "mainClass": "main.Tutorial",
+            "projectName": "XD_spotify_8f92911e"
+        },
+        {
+            "type": "java",
+            "name": "testVLCJPlayer",
+            "request": "launch",
+            "mainClass": "main.testVLCJPlayer",
+            "projectName": "XD_spotify_8f92911e"
+        },
+        {
+            "type": "java",
             "name": "testVLCPlayer",
             "request": "launch",
             "mainClass": "main.testVLCPlayer",
