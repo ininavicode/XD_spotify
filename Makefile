@@ -20,7 +20,7 @@ run:
 
 debug:
 	# Start Java program in debug mode, waiting for debugger to attach on port 5005
-	java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -cp $(BUILD_DIR) $(MAIN)
+	java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -Djava.library.path=$(SRC_DIR)/keyboard/C -cp $(BUILD_DIR) $(MAIN)
 
 debug_attach:
 	# Attach jdb to the running process on port 5005
