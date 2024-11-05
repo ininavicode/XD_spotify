@@ -1,31 +1,22 @@
 public class Main {
     public static void main(String[] args) {
-        KeyPressReader reader = new KeyPressReader();
-        System.out.println("Press any key to see its code (Press 'q' to exit)...");
+        int timeout = 5; // Initial timeout in seconds
+
+        System.out.println("Press any key to reset the timeout. Timeout set to " + timeout + " seconds...");
 
         while (true) {
-            int key = reader.getKey(); // Get key as int
-
-            // Interpret the key press
-            switch (key) {
-                case KeyPressReader.ARROW_UP:
-                    System.out.println("You pressed: Arrow Up");
+            int key = KeyPressReader.getKeyTimeout(1000);
+            if (key != -1) { // A key was pressed
+                System.out.println("You pressed: " + key);
+                if (key == 'q') { // Exit on 'q' key press
                     break;
-                case KeyPressReader.ARROW_DOWN:
-                    System.out.println("You pressed: Arrow Down");
-                    break;
-                case KeyPressReader.ARROW_LEFT:
-                    System.out.println("You pressed: Arrow Left");
-                    break;
-                case KeyPressReader.ARROW_RIGHT:
-                    System.out.println("You pressed: Arrow Right");
-                    break;
-                case 'q':
-                    System.out.println("Exiting...");
-                    return;
-                default:
-                    System.out.println("You pressed: " + key);
-                    break;
+                }
+                // Reset the timeout if any key is pressed
+                timeout = 5;
+            } else {
+                // Timeout occurred
+                System.out.println("Timeout occurred. Exiting...");
+                break;
             }
         }
     }

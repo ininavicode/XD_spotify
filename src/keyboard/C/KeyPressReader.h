@@ -24,10 +24,18 @@ extern "C" {
 /*
  * Class:     KeyPressReader
  * Method:    getKey
- * Signature: ()C
+ * Signature: ()I
  */
-JNIEXPORT jchar JNICALL Java_KeyPressReader_getKey
-  (JNIEnv *, jobject);
+JNIEXPORT jint JNICALL Java_KeyPressReader_getKey
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     KeyPressReader
+ * Method:    getKeyTimeout
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_KeyPressReader_getKeyTimeout
+  (JNIEnv *, jclass, jint);
 
 #ifdef __cplusplus
 }
