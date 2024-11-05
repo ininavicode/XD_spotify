@@ -1,8 +1,7 @@
 public class KeyPressReader {
 
     static {
-        // Load the C library (shared object)
-        System.loadLibrary("key_reader"); // `libkey_reader.so`
+        System.loadLibrary("key_reader"); // The shared object file will be named `libkey_reader.so`
     }
 
     // Native method declaration
@@ -10,7 +9,18 @@ public class KeyPressReader {
      * The method waits for any key pressed, then it returns the pressed char
      * @return The pressed char at the keyboard
      */
-    public static native char getKey();
+    static public native int getKey();
+
+    /**
+     * The method waits for any key pressed, if the selected timeout ends, the function gets out,
+     * and returns -1. If there is any pressed key before the timeout, the function returns the ASCII code of the
+     * pressed key.
+     * If the pressed key does not have an explicit ASCII respective value, this class provides constant values
+     * to compare to the function return, in order to detect other common keys.
+     * @param timeoutMs : the timeout in milliseconds
+     */
+    static public native int getKeyTimeout(int timeoutMs);
+
 
     // Define constants for special keys
     public static final int ARROW_UP = 1001;
