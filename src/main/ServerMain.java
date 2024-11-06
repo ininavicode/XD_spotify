@@ -1,19 +1,16 @@
 package main;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
 import protocol.*;
 import song.*;
 
 public class ServerMain {
-
+    private static final String AVAILABLE_SONGS_FILE = "dataserver/available_songs.csv";
     static final private String DATA_PATH = "dataserver/";
     public static void main(String[] args) throws IOException {
         
         Server server = new Server(12000);
-        Server.SessionHandler sessionHandler = initialListOfSongs(server);
+        Server.SessionHandler sessionHandler = server.new SessionHandler(AVAILABLE_SONGS_FILE);
         
         // Infinite loop.
         while (true) { 
@@ -64,38 +61,38 @@ public class ServerMain {
         
     }
 
-    /**
-     * Method to create the session handler + search engine instance.
-     * 
-     * @param server The instance of the sever from which the handler will be generated, 
-     *               to force the existance of one.
-     * @return The instance of the session handler.
-     */
-    private static Server.SessionHandler initialListOfSongs(Server server) {
-        ArrayList<Song> songList;
+    // /**
+    //  * Method to create the session handler + search engine instance.
+    //  * 
+    //  * @param server The instance of the sever from which the handler will be generated, 
+    //  *               to force the existance of one.
+    //  * @return The instance of the session handler.
+    //  */
+    // private static Server.SessionHandler initialListOfSongs(Server server) {
+    //     ArrayList<Song> songList;
 
-        try {
-            songList = SongList.fromFile(DATA_PATH + "song_names.csv");
+    //     try {
+    //         songList = SongList.fromFile(DATA_PATH + "song_names.csv");
             
-        } catch (FileNotFoundException e) {
-            System.err.printf("\nFile %s not found", DATA_PATH + "song_names.csv");
-            songList = new ArrayList<Song>(0);
-        }
+    //     } catch (FileNotFoundException e) {
+    //         System.err.printf("\nFile %s not found", DATA_PATH + "song_names.csv");
+    //         songList = new ArrayList<Song>(0);
+    //     }
 
 
-        Map.Entry<Song, String>[] mapEntries = new Map.Entry[songList.size()];
+    //     Map.Entry<Song, String>[] mapEntries = new Map.Entry[songList.size()];
 
-        int i = 0;
-        for (Song song : songList) {
-            mapEntries[i++] = Map.entry(song, song.toFilename());
-        }
+    //     int i = 0;
+    //     for (Song song : songList) {
+    //         mapEntries[i++] = Map.entry(song, song.toFilename());
+    //     }
 
-        return server.new SessionHandler(Map.ofEntries(mapEntries));
+    //     return server.new SessionHandler(Map.ofEntries(mapEntries));
 
-        // return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("Family Business", "Kanye West"), "data/Family-Business.mp3"),
-        //                                                Map.entry(new Song("ISABELLA", "Kanye West, Lil Nas X"), "data/ISABELLA.mp3")
-        //                                               ));
-    }
+    //     // return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("Family Business", "Kanye West"), "data/Family-Business.mp3"),
+    //     //                                                Map.entry(new Song("ISABELLA", "Kanye West, Lil Nas X"), "data/ISABELLA.mp3")
+    //     //                                               ));
+    // }
 
 
 }

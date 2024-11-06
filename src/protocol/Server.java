@@ -290,15 +290,11 @@ public class Server {
         /**
          * Constructor of the class.
          * 
-         * @param listOfInitialSongs A map which contains each song with its mp3 directory name in order to be added to the search engine.
-         * @pre Null values are not checked as this information will be put by the programmers.
+         * @param fileName The fileName from which the server will have the list of all of the songs available.
          */
-        public SessionHandler(Map<Song, String> listOfInitialSongs) {
-            searchEngine = new SearchEngine();
-            syncroHandler = new Object();
-            listOfInitialSongs.forEach((key, value) ->{
-                searchEngine.addSong(key, value); // The songs will be added to the hashmap of the search engine.
-            });
+        public SessionHandler(String fileName) {
+            searchEngine = new SearchEngine(fileName);
+            syncroHandler = new Object(); // To control the timeouts to the different threads.
             historialOfSearches = new HashMap<>(100); // Initial capacity to avoid constantly making O(n) arrangements of the hash.
             // Generation and start of the thread that will count the timeouts.
             timeoutCalc = new Thread(() -> {

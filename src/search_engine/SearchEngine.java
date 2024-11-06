@@ -3,6 +3,10 @@ package search_engine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import song.*;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * Class that defines the search engine for the server and the client.
  * It has a hash for songs and an arraylist for saving the info of the songs.
@@ -14,9 +18,25 @@ public class SearchEngine {
 
     /**
      * Constructor of the class.
+     * 
+     * @param fileName The file from which the search engine will initially load all the data.
+     * @pre The filename must be in the correct format, first the number of songs, then the list of songs.
      */
-    public SearchEngine() {
-        songsHash = new HashMap<>();
+    public SearchEngine(String fileName) {
+        try(Scanner fileReader = new Scanner(new File(fileName))) {
+            int numSongs = Integer.parseInt(fileReader.nextLine()); // The file structure will always be the same.
+            songsHash = new HashMap<>(numSongs);
+            String nextSongFileFormat;
+            Song nextSong;
+            for(int i = 0; i < numSongs; i++) {
+                nextSongFileFormat = fileReader.nextLine(); // Read the mp3 format of the song.
+                nextSong = new Song(nextSongFileFormat);
+                songsHash.put(nextSong, Song.songToFilename(nextSong));
+            }
+        }
+        catch (FileNotFoundException exc) {
+            exc.printStackTrace();
+        }
     }
 
     /**

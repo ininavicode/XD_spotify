@@ -13,8 +13,12 @@ import mp3_player.*;
 public class ClientMain {
     // Constantes
     private static final String DATAPATH = "data/";
+    private static final String AVAILABLE_SONGS_FILE = "data/available_songs.csv";
     private static final int TIMEOUT = 5000;
-
+    private static final int WRITING_INF = 0;
+    private static final int WRITING_TIME = 1;
+    private static final int PLAYING = 2;
+    private static final int SERVER_SEND = -1;
     // Variables
     private static String input;
     private static int key;
@@ -26,57 +30,43 @@ public class ClientMain {
     private static VLCJPlayer mp3Player;
     private static Song selected ;
     private static String dir;
+    //private static boolean shouldWait;
 
     public static void main(String[] args) throws IOException, UnknownHostException {
         
         inicializaciones();
-
+        int state = WRITING_INF;
+        
         while (true) {
-            if (menu != null) {
-                menu.render();
+            /* 
+            if(shouldWait) {
+                state = esperarDatosUnTiempo();
             }
-            key = KeyPressReader.getKeyTimeout(TIMEOUT);
-            System.out.println(key);
-            if (key != -1) {
-                if (key == 'q') {
+            else {
+                state = esperarDatos();
+                if(state == WRITING) shouldWait = true; // The first data has been written.
+                // else PLAYING, no timeouts needed.
+            }
+            */
+            switch (state) {
+                case WRITING_INF:
+                    menu.render();
+                    state = esperarDatos();
                     break;
-                }
-                else if (menu != null && key == KeyPressReader.ARROW_UP) {
-                    menu.selectSong(false);
-                    System.out.println(menu.getSelectedIndex());
-                }
-                else if (menu != null && key == KeyPressReader.ARROW_DOWN) {
-                    menu.selectSong(true);
-                    System.out.println(menu.getSelectedIndex());
-                }
-                else if (key == KeyPressReader.BACKSPACE) {
-                    input = input.substring(0,input.length() - 1);
+                case WRITING_TIME:
+                    menu.render();
+                    state = esperarDatosUnTiempo();
+                    break;
+                case PLAYING:
                     clearConsole();
-                    System.out.println(input);
-                }
-                else if (key == KeyPressReader.INTRO) {
-                    selected = menu.getSelectedSong();
-                    dir = historialOfSearches.getMP3ByName(selected);
-                    if(dir == null) {
-                        // Song not available, request to server made.
-                        // TODO: Add the code to transform the song to the name that will be sent to the server.
-                        dir = selected.toFilename();
-                        client.requestReceiveFile(selected, DATAPATH + dir);
-                        historialOfSearches.addSong(selected, dir); // Add the searched song to the directory.
-                    }
-                    // If available, automatically play it.
-                    mp3Player.play(DATAPATH + dir); // TODO: Revise the format of the mp3 saving.                
-                } else {
-                    pressedChar = (char) key;
-                    input+=pressedChar;
-                    clearConsole();
-                    System.out.println(input);
-                }
-            } else { // If timeout occurs, search for the list of songs.
-                client.requestSearchEngine(input, -1L);
-                response = client.receiveSearchEngine();
-                menu = new Menu(response.songList);
+                    renderMenuPlayer();
+                    state = reproducirCancion();
+                    break;
+                case SERVER_SEND:
+                    state = enviarInfo();
+                    break;
             }
+ 
         }
     }
 
@@ -93,10 +83,11 @@ public class ClientMain {
         try {
             // ##################### main variables #####################
             client = new Client("127.0.0.1", 12000);  // Aquí ocurre el error
-            historialOfSearches = new SearchEngine();
+            historialOfSearches = new SearchEngine(AVAILABLE_SONGS_FILE);
             mp3Player = new VLCJPlayer();
             menu = new Menu(historialOfSearches.getSongsList());
             input = "";
+            //shouldWait = false;
         } catch (UnknownHostException e) {
             System.err.println("Error: No se pudo resolver el nombre del host.");
             e.printStackTrace();
@@ -105,6 +96,157 @@ public class ClientMain {
             System.err.println("Error: Error al crear la conexión al servidor.");
             e.printStackTrace();
         }
+    }
+
+    private static int reproducirCancion() {
+        int res = 0;
+
+        selected = menu.getSelectedSong();
+        dir = historialOfSearches.getMP3ByName(selected);
+        if(dir == null) {
+            // Song not available, request to server made.
+            dir = selected.toFilename();
+            try {
+                client.requestReceiveFile(selected, DATAPATH + dir);
+            }
+            catch (IOException e) {
+                System.err.println("Error: Error al crear la conexión al servidor.");
+                e.printStackTrace();
+            }
+            historialOfSearches.addSong(selected, dir); // Add the searched song to the directory.
+        }
+        // If available, automatically play it.
+        mp3Player.play(DATAPATH + dir);
+
+        boolean salir = false;
+        boolean pausa = false;
+        while (!salir) {
+            key = KeyPressReader.getKey();
+            switch (key) {
+                case KeyPressReader.Q_MAYUS:
+                    res = WRITING_INF;
+                    salir = true;
+                    break;
+                case KeyPressReader.BACKSPACE:
+                    if (pausa) {
+                        mp3Player.play();
+                        pausa = false;
+
+                    } else {
+                        mp3Player.pause();
+                        pausa = true;
+                    }
+                    break;
+                case KeyPressReader.ARROW_RIGHT:
+                    mp3Player.advance10Seconds();
+                    break;
+                case KeyPressReader.ARROW_LEFT:
+                    mp3Player.goBack10Seconds();
+                    break;
+            }
+        }
+        return res;
+    }
+    
+    private static int esperarDatos() {
+        int res;
+
+        key = KeyPressReader.getKey();
+        if (key == KeyPressReader.ARROW_UP) {
+            menu.decrementarIndice();
+            System.out.println(menu.getSelectedIndex());
+            res = WRITING_TIME;
+        }
+        else if (key == KeyPressReader.ARROW_DOWN) {
+            menu.incrementarIndice();
+            System.out.println(menu.getSelectedIndex());
+            res = WRITING_TIME;
+        }
+        else if (key == KeyPressReader.BACKSPACE) {
+            input = input.substring(0,input.length() - 1);
+            clearConsole();
+            System.out.println(input);
+            res = WRITING_TIME;
+        }
+        else if (key == KeyPressReader.INTRO) {
+            res = PLAYING;     
+            //shouldWait = false;        
+        } else {
+            pressedChar = (char) key;
+            input+=pressedChar;
+            clearConsole();
+            System.out.println(input);
+            res = WRITING_TIME;
+        }
+        // Pedimos la informacion al servidor
+        try {
+            client.requestSearchEngine(input, -1L);
+            response = client.receiveSearchEngine();
+            menu = new Menu(response.songList);
+        }
+        catch (IOException e) {
+            System.err.println("Error: Error al crear la conexión al servidor.");
+            e.printStackTrace();
+        }
+        
+        return res;
+    }
+
+    private static int esperarDatosUnTiempo() {
+        int res;
+        key = KeyPressReader.getKeyTimeout(TIMEOUT);
+        if (key != -1) {
+            if (key == KeyPressReader.ARROW_UP) {
+                menu.decrementarIndice();
+                System.out.println(menu.getSelectedIndex());
+                res = WRITING_TIME;
+            }
+            else if (key == KeyPressReader.ARROW_DOWN) {
+                menu.incrementarIndice();
+                System.out.println(menu.getSelectedIndex());
+                res = WRITING_TIME;
+            }
+            else if (key == KeyPressReader.BACKSPACE) {
+                input = input.substring(0,input.length() - 1);
+                clearConsole();
+                System.out.println(input);
+                res = WRITING_TIME;
+            }
+            else if (key == KeyPressReader.INTRO) {
+                res = PLAYING;             
+            } else {
+                pressedChar = (char) key;
+                input+=pressedChar;
+                clearConsole();
+                System.out.println(input);
+                res = WRITING_TIME;
+            }
+        } else {
+            res = SERVER_SEND;
+        }
+        
+        return res;
+    }
+
+    private static int enviarInfo() {
+        try {
+            client.requestSearchEngine(input, -1L);
+            response = client.receiveSearchEngine();
+            menu = new Menu(response.songList);
+        }
+        catch (IOException e) {
+            System.err.println("Error: Error al crear la conexión al servidor.");
+            e.printStackTrace();
+        }
+
+        return WRITING_INF;
+    }
+
+    public static void renderMenuPlayer() {
+        System.out.println("----------- OPCIONES -----------");
+        System.out.println("---- PAUSE/RESUME (SPACE) ------");
+        System.out.println("-------- +10 SEC (--->) --------");
+        System.out.println("-------- -10 SEC (--->) --------");
     }
     
 }

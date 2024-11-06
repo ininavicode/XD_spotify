@@ -23,15 +23,15 @@ public class Menu {
         return songs.get(selectedIndex);
     }
 
-    // Cambiar la canción seleccionada
-    public void selectSong(boolean incremento) {
-        if (selectedIndex >= 0 && selectedIndex <= songs.size()-1) {
-            if (incremento) {
-                selectedIndex += 1;
-            } else {
-                selectedIndex -= 1;
-            }
-            
+    public void incrementarIndice() {
+        if (selectedIndex >= 0 && selectedIndex < songs.size() - 1) {
+            selectedIndex += 1;
+        }
+    }
+
+    public void decrementarIndice() {
+        if (selectedIndex > 0) {
+            selectedIndex -= 1;
         }
     }
 
