@@ -61,7 +61,9 @@ int get_key_press_with_timeout(int timeout_ms) {
     return ch;
 }
 // JNI function to expose to Java
-JNIEXPORT jint JNICALL Java_KeyPressReader_getKeyTimeout(JNIEnv *env, jobject obj, jint timeout_ms) {
+// The name of the function is by convention (otherwise does not work)
+// Java_<package>_<class>_<function_name>
+JNIEXPORT jint JNICALL Java_keyboard_KeyPressReader_getKeyTimeout(JNIEnv *env, jobject obj, jint timeout_ms) {
     return get_key_press_with_timeout(timeout_ms);
 }
 
@@ -105,7 +107,7 @@ int get_key_press() {
 }
 
 // JNI function to expose to Java
-JNIEXPORT jint JNICALL Java_KeyPressReader_getKey(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL Java_keyboard_KeyPressReader_getKey(JNIEnv *env, jobject obj) {
     return get_key_press();
 }
 

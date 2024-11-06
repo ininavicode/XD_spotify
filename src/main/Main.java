@@ -1,3 +1,5 @@
+import keyboard.*;
+
 public class Main {
     public static void main(String[] args) {
         int timeout = 1000; // Initial timeout in ms
