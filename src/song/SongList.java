@@ -24,7 +24,7 @@ public class SongList {
      * @param raw : byte[] The data of the ArrayList<Song> encoded with the default charset 
      * @return An ArrayList<Song> instance containing the data encoded with the default charset at byte[] raw
      */
-    static public ArrayList<Song> fromByteRaw(byte[] raw) throws ExceptionInInitializerError {
+    static public ArrayList<Song> fromByteRaw(byte[] raw) throws IllegalArgumentException {
         String decodedRaw = new String(raw);
         String[] songRawList = decodedRaw.split("\n");
         
@@ -38,7 +38,6 @@ public class SongList {
         return output;
     }
 
-    // TOTEST: Get the data of the songs list from a .csv file
     /**
      * @return  If the file is empty (0 songs), returns an empty ArrayList<Song>(1)
      *          If the file contains data, returns an ArrayList<Song> with the proper data
