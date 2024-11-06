@@ -1,6 +1,7 @@
 package main;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import keyboard.KeyPressReader;
 import menu.Menu;
@@ -10,21 +11,25 @@ import song.*;
 import mp3_player.*;
 
 public class ClientMain {
+    // Constantes
     private static final String DATAPATH = "data/";
-
     private static final int TIMEOUT = 5000;
-    public static void main(String[] args) throws IOException {
-        
-        // ##################### main variables #####################
-        Client client = new Client("127.0.0.1", 12000);
-        SearchEngine historialOfSearches = new SearchEngine(); // Creation of the list of songs already searched with this client this session (flushes when restarting the app).
-        VLCJPlayer mp3Player = new VLCJPlayer();
 
-        String input = "";
-        int key;
-        Menu menu = new Menu(historialOfSearches.getSongsList()); // The first lookup will be the historial of searches.
-        char pressedChar;
-        Protocol.ResponseSearchEngine_t response;
+    // Variables
+    private static String input;
+    private static int key;
+    private static Menu menu;
+    private static char pressedChar;
+    private static Protocol.ResponseSearchEngine_t response;
+    private static Client client;
+    private static SearchEngine historialOfSearches;
+    private static VLCJPlayer mp3Player;
+    private static Song selected ;
+    private static String dir;
+
+    public static void main(String[] args) throws IOException, UnknownHostException {
+        
+        inicializaciones();
 
         while (true) {
             if (menu != null) {
@@ -50,8 +55,8 @@ public class ClientMain {
                     System.out.println(input);
                 }
                 else if (key == KeyPressReader.INTRO) {
-                    Song selected = menu.getSelectedSong();
-                    String dir = historialOfSearches.getMP3ByName(selected);
+                    selected = menu.getSelectedSong();
+                    dir = historialOfSearches.getMP3ByName(selected);
                     if(dir == null) {
                         // Song not available, request to server made.
                         // TODO: Add the code to transform the song to the name that will be sent to the server.
@@ -75,7 +80,7 @@ public class ClientMain {
         }
     }
 
-    public static void clearConsole() {
+    private static void clearConsole() {
         try {
             System.out.print("\033[H\033[2J");
             System.out.flush();
@@ -83,4 +88,23 @@ public class ClientMain {
             e.printStackTrace();
         }
     }
+
+    private static void inicializaciones() {
+        try {
+            // ##################### main variables #####################
+            client = new Client("127.0.0.1", 12000);  // Aquí ocurre el error
+            historialOfSearches = new SearchEngine();
+            mp3Player = new VLCJPlayer();
+            menu = new Menu(historialOfSearches.getSongsList());
+            input = "";
+        } catch (UnknownHostException e) {
+            System.err.println("Error: No se pudo resolver el nombre del host.");
+            e.printStackTrace();
+            // Manejar el error de alguna manera (por ejemplo, salir o intentar otro host)
+        } catch (IOException e) {
+            System.err.println("Error: Error al crear la conexión al servidor.");
+            e.printStackTrace();
+        }
+    }
+    
 }
