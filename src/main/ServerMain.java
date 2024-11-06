@@ -1,14 +1,15 @@
 package main;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
-
 import protocol.*;
-import protocol.Server.SessionHandler;
 import song.*;
 
 public class ServerMain {
+
+    static final private String DATA_PATH = "datasrv/";
     public static void main(String[] args) throws IOException {
         
         Server server = new Server(12000);
@@ -32,17 +33,17 @@ public class ServerMain {
             switch (commandType) {
                 case SEARCH_ENGINE_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
-                    System.out.print("\nCookie: " + server.getLastPacket_Cookie());
+                    System.out.printf("\nCookie: %x%n", server.getLastPacket_Cookie());
 
                     Protocol.ResponseSearchEngine_t result = sessionHandler.makeSearch(server.getLastPacket_Cookie(), server.getLastPacket_SongName());
-                    System.out.println("\nSending response to client with cookie: " + result.cookie);
+                    System.out.printf("\nSending response to client with cookie: %x%n", (result.cookie));
                     server.responseSearchEngine(new Protocol.ResponseSearchEngine_t(result.cookie, result.songList));
 
                     break;
                 case SONG_MP3_N_PACKETS_REQUEST:
                     System.out.print("\nSong name: " + server.getLastPacket_SongName());
 
-                    server.responseFilePacketsSize("data/song.mp3");
+                    server.responseFilePacketsSize(DATA_PATH + Song.songStringToFilename(server.getLastPacket_SongName()));
 
                     break;
                 case SONG_MP3_PACKETS_RANGE_REQUEST:
@@ -50,7 +51,7 @@ public class ServerMain {
                     System.out.print("\nStart Packet ID: " + server.getLastPacket_StartPacketID());
                     System.out.print("\nEnd Packet ID: " + server.getLastPacket_EndPacketID());
 
-                    server.responseFilePacketsRange("data/song.mp3", server.getLastPacket_StartPacketID(), server.getLastPacket_EndPacketID());  // send the mp3
+                    server.responseFilePacketsRange(DATA_PATH + Song.songStringToFilename(server.getLastPacket_SongName()), server.getLastPacket_StartPacketID(), server.getLastPacket_EndPacketID());  // send the mp3
 
                     break;
 
@@ -71,9 +72,30 @@ public class ServerMain {
      * @return The instance of the session handler.
      */
     private static Server.SessionHandler initialListOfSongs(Server server) {
-        return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("Family Business", "Kanye West"), "data/Family-Business.mp3"),
-                                                       Map.entry(new Song("ISABELLA", "Kanye West, Lil Nas X"), "data/ISABELLA.mp3")
-                                                      ));
+        ArrayList<Song> songList;
+
+        try {
+            songList = SongList.fromFile(DATA_PATH + "song_names.csv");
+            
+        } catch (FileNotFoundException e) {
+            System.err.printf("\nFile %s not found", DATA_PATH + "song_names.csv");
+            songList = new ArrayList<Song>(0);
+        }
+
+
+        Map.Entry[] mapEntries = new Map.Entry[songList.size()];
+
+        int i = 0;
+        for (Song song : songList) {
+            mapEntries[i++] = Map.entry(song, song.toFilename());
+        }
+
+        return server.new SessionHandler(Map.ofEntries(mapEntries));
+
+        // return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("Family Business", "Kanye West"), "data/Family-Business.mp3"),
+        //                                                Map.entry(new Song("ISABELLA", "Kanye West, Lil Nas X"), "data/ISABELLA.mp3")
+        //                                               ));
     }
+
 
 }

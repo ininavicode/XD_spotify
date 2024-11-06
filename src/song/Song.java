@@ -4,7 +4,6 @@ package song;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.InvalidPropertiesFormatException;
 // libs (end)   -------------
 
 
@@ -32,29 +31,21 @@ public class Song {
     /**
      * Initializes the instance with the data of the rawChar, that should be in the proper format
      */
-    public Song(String rawChar) throws ExceptionInInitializerError {
-        try {
+    public Song(String rawChar) throws IllegalArgumentException {
             setFromCharRaw(rawChar);
-            
-        } catch (InvalidPropertiesFormatException e) {
-            throw new ExceptionInInitializerError(e.getMessage());
-        }
     }
 
     /**
      * Initializes the instance with the data of the raw byte, that should be in the proper format
      */
-    public Song(byte[] raw) throws ExceptionInInitializerError {
-        try {
-            setFromByteRaw(raw);
+    public Song(byte[] raw) throws IllegalArgumentException {
+        setFromByteRaw(raw);
             
-        } catch (InvalidPropertiesFormatException e) {
-            throw new ExceptionInInitializerError(e.getMessage());
-        }
-
     }
     
     // ##################### methods #####################
+
+
     /**
      * Adds a new author if it does not exist yet
      * @Param author : Name of the author to add
@@ -100,20 +91,23 @@ public class Song {
      * @param raw : Formatted string encoded with default charset with the data of the song and author(s)
      * @throws InvalidPropertiesFormatException: If the format of the raw is invalid
      */
-    public void setFromCharRaw(String raw) throws InvalidPropertiesFormatException {
+    public void setFromCharRaw(String raw) throws IllegalArgumentException {
         String[] parsedList = raw.split(";");
 
         authorsList = new ArrayList<>(parsedList.length);
 
         if (parsedList.length < 2) {
-            throw new InvalidPropertiesFormatException("The format of the string is not valid");
+            throw new IllegalArgumentException();
+        }
+        else {
+            
+            name = parsedList[0];
+    
+            for (int i = 1 ; i < parsedList.length; i++) {
+                authorsList.add(i - 1, parsedList[i]);
+            }
         }
 
-        name = parsedList[0];
-
-        for (int i = 1 ; i < parsedList.length; i++) {
-            authorsList.add(i - 1, parsedList[i]);
-        }
     }
 
     /**
@@ -121,7 +115,7 @@ public class Song {
      * @param raw : Formatted string with the data of the song and author(s)
      * @throws InvalidPropertiesFormatException: If the format of the raw is invalid
      */
-    public void setFromByteRaw(byte[] raw) throws InvalidPropertiesFormatException {
+    public void setFromByteRaw(byte[] raw) throws IllegalArgumentException {
         String decodedRaw = new String(raw);
         setFromCharRaw(decodedRaw);
     }
@@ -164,6 +158,14 @@ public class Song {
         return true;
     }
 
+    /**
+     * Converts the name of the song to a the established name for the .mp3 files
+     * @return The name of the .mp3
+     */
+    public String toFilename() {
+        return songToFilename(this);
+    }
+
     // ##################### getters #####################
     /**
      * @Return The author at the index i
@@ -186,6 +188,23 @@ public class Song {
      */
     public String getName() {
         return name;
+    }
+
+    // ##################### static #####################
+    /**
+     * Converts the name of the song to a the established name for the .mp3 files
+     * @return The name of the .mp3
+     */
+    public static String songToFilename(Song song) {
+        return song.getName().replace(' ', '-') + ".mp3";
+    }
+
+    /**
+     * Converts the name of the song (in string format) to a the established name for the .mp3 files
+     * @return The name of the .mp3
+     */
+    public static String songStringToFilename(String name) {
+        return songToFilename(new Song(name));
     }
     
 }

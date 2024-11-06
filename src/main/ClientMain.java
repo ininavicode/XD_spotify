@@ -2,9 +2,10 @@ package main;
 
 import java.io.IOException;
 import protocol.*;
-import song.*;
+import song.Song;
 
 public class ClientMain {
+    static final String DATA_PATH = "datacli/";
     public static void main(String[] args) throws IOException {
         
         Client client = new Client("127.0.0.1", 12000);
@@ -13,24 +14,25 @@ public class ClientMain {
         System.in.read();
         
         // ##################### REQUEST SEARCH ENGINE #####################
-        client.requestSearchEngine("F", -1L); // Initially, cookie is -1 to check for a new one.
-
+        client.requestSearchEngine("To", -1L); // Initially, cookie is -1 to check for a new one.
+        
         System.out.println("\nWaiting for server response");
         Protocol.ResponseSearchEngine_t response = client.receiveSearchEngine();
-
-        System.out.println("RESPONSE RECEIVED\nCookie: " + response.cookie + "\nList:\n" + response.songList);
+        
+        System.out.println("RESPONSE RECEIVED\nCookie: " + Long.toHexString(response.cookie) + "\nList:\n" + response.songList);
         
         System.out.print("\n");
-
+        
         System.out.print("\nClick enter to send second request");
         System.in.read();
-
+        
+        // FIXME: An error ocurres with the second request at the server
         client.requestSearchEngine("Fam", response.cookie); 
 
         System.out.println("\nWaiting for server response");
         response = client.receiveSearchEngine();
 
-        System.out.println("RESPONSE RECEIVED\nCookie: " + response.cookie + "\nList:\n" + response.songList);
+        System.out.println("RESPONSE RECEIVED\nCookie: " + Long.toHexString(response.cookie) + "\nList:\n" + response.songList);
         
         System.out.print("\n");
 
@@ -45,8 +47,13 @@ public class ClientMain {
         // -rw-r--r-- 1 javi javi 8950291 Oct 31 08:30 song_rec.mp3
         // -rw-r--r-- 1 javi javi 4173201 Oct 31 08:46 str_rec.txt
         // -rw-r--r-- 1 javi javi 4175999 Oct 31 08:44 tosend.txt
+        System.out.print("\nClick enter to request a song.mp3 file");
+        System.in.read();
 
-        // client.requestReceiveFile(new Song("Song Name", "Author"), "data/song_rec.mp3");  // request the mp3
+        Song toRequest = new Song("ISABELLA", "Kanye West", "Lil Nas X");
+        System.out.print("\nRequesting -> " + toRequest);
+
+        client.requestReceiveFile(toRequest, DATA_PATH + toRequest.toFilename());  // request the mp3
         // // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
     }
 }
