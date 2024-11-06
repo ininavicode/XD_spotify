@@ -17,21 +17,25 @@ public class ClientMain {
         int key;
         Menu menu = null;
         char pressedChar;
+        Protocol.ResponseSearchEngine_t response;
 
         while (true) {
             if (menu != null) {
                 menu.render();
             }
             key = KeyPressReader.getKeyTimeout(TIMEOUT);
+            System.out.println(key);
             if (key != -1) {
                 if (key == 'q') {
                     break;
                 }
                 else if (menu != null && key == KeyPressReader.ARROW_UP) {
                     menu.selectSong(false);
+                    System.out.println(menu.getSelectedIndex());
                 }
                 else if (menu != null && key == KeyPressReader.ARROW_DOWN) {
                     menu.selectSong(true);
+                    System.out.println(menu.getSelectedIndex());
                 }
                 else if (key == KeyPressReader.BACKSPACE) {
                     input = input.substring(0,input.length() - 1);
@@ -48,21 +52,16 @@ public class ClientMain {
                 }
             } else { // En caso de TIMEOUT enviamos peticion al servidor para recibir la lista de canciones
                 client.requestSearchEngine(input, -1L);
-                Protocol.ResponseSearchEngine_t response = client.receiveSearchEngine();
+                response = client.receiveSearchEngine();
                 menu = new Menu(response.songList);
-                System.out.println("HOLA");
             }
         }
     }
 
     public static void clearConsole() {
         try {
-            if (System.getProperty("os.name").contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
-            }
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }

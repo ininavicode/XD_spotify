@@ -15,9 +15,13 @@ public class Menu {
         this.selectedIndex = 0;
     }
 
+    public int getSelectedIndex() {
+        return selectedIndex;
+    }
+
     // Cambiar la canción seleccionada
     public void selectSong(boolean incremento) {
-        if (selectedIndex > 0 && selectedIndex < songs.size()) {
+        if (selectedIndex >= 0 && selectedIndex <= songs.size()-1) {
             if (incremento) {
                 selectedIndex += 1;
             } else {

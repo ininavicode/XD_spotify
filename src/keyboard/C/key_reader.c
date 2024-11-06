@@ -105,7 +105,7 @@ int get_key_press() {
 }
 
 // JNI function to expose to Java
-JNIEXPORT jint JNICALL Java_KeyPressReader_getKey(JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL Java_keyboard_KeyPressReader_getKey(JNIEnv *env, jobject obj) {
     return get_key_press();
 }
 

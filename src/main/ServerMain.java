@@ -69,7 +69,7 @@ public class ServerMain {
      * @return The instance of the session handler.
      */
     private static Server.SessionHandler initialListOfSongs(Server server) {
-        return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("Family Business", "Kanye West"), "data/Family-Business.mp3"),
+        return server.new SessionHandler(Map.ofEntries(Map.entry(new Song("ISALOCA", "Kanye West"), "data/Family-Business.mp3"),
                                                        Map.entry(new Song("ISABELLA", "Kanye West, Lil Nas X"), "data/ISABELLA.mp3")
                                                       ));
     }
