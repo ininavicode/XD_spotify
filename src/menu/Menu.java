@@ -30,7 +30,7 @@ public class Menu {
     // Método para renderizar el menú
     public void render() {
         // Limpiar consola antes de mostrar el nuevo menú
-        clearConsole();
+        // clearConsole();
 
         System.out.println("Lista de Canciones:");
         for (int i = 0; i < songs.size(); i++) {
@@ -43,19 +43,5 @@ public class Menu {
         }
 
         System.out.println("\nSelecciona una canción con las teclas de dirección o 'q' para salir.");
-    }
-
-    // Función para limpiar la consola (dependiendo del sistema operativo)
-    public void clearConsole() {
-        try {
-            if (System.getProperty("os.name").contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

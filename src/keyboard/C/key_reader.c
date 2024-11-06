@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <jni.h>
+#include "keyboard_KeyPressReader.h"
 
 // Define constants for special keys
 #define KEY_ARROW_UP    1001
@@ -61,10 +62,9 @@ int get_key_press_with_timeout(int timeout_ms) {
     return ch;
 }
 // JNI function to expose to Java
-JNIEXPORT jint JNICALL Java_KeyPressReader_getKeyTimeout(JNIEnv *env, jobject obj, jint timeout_ms) {
+JNIEXPORT jint JNICALL Java_keyboard_KeyPressReader_getKeyTimeout(JNIEnv *env, jobject obj, jint timeout_ms) {
     return get_key_press_with_timeout(timeout_ms);
 }
-
 
 
 // Function to read a single key press or detect special keys

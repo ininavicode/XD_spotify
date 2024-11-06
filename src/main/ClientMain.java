@@ -13,9 +13,10 @@ public class ClientMain {
         // ##################### main variables #####################
         Client client = new Client("127.0.0.1", 12000);
 
-        String input = null;
+        String input = "";
         int key;
         Menu menu = null;
+        char pressedChar;
 
         while (true) {
             if (menu != null) {
@@ -34,21 +35,36 @@ public class ClientMain {
                 }
                 else if (key == KeyPressReader.BACKSPACE) {
                     input = input.substring(0,input.length() - 1);
-                    menu.clearConsole();
+                    clearConsole();
                     System.out.println(input);
                 }
                 else if (key == KeyPressReader.INTRO) {
                     
                 } else {
-                    input+=key;
-                    menu.clearConsole();
+                    pressedChar = (char) key;
+                    input+=pressedChar;
+                    clearConsole();
                     System.out.println(input);
                 }
             } else { // En caso de TIMEOUT enviamos peticion al servidor para recibir la lista de canciones
                 client.requestSearchEngine(input, -1L);
                 Protocol.ResponseSearchEngine_t response = client.receiveSearchEngine();
                 menu = new Menu(response.songList);
+                System.out.println("HOLA");
             }
+        }
+    }
+
+    public static void clearConsole() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
