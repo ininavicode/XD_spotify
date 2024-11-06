@@ -5,6 +5,9 @@ import java.io.IOException;
 import keyboard.KeyPressReader;
 import menu.Menu;
 import protocol.*;
+import search_engine.*;
+import song.*;
+import mp3_player.*;
 
 public class ClientMain {
 
@@ -12,10 +15,12 @@ public class ClientMain {
     public static void main(String[] args) throws IOException {
         // ##################### main variables #####################
         Client client = new Client("127.0.0.1", 12000);
+        SearchEngine historialOfSearches = new SearchEngine(); // Creation of the list of songs already searched with this client this session (flushes when restarting the app).
+        VLCJPlayer mp3Player = new VLCJPlayer();
 
         String input = "";
         int key;
-        Menu menu = null;
+        Menu menu = new Menu(historialOfSearches.getSongsList()); // The first lookup will be the historial of searches.
         char pressedChar;
         Protocol.ResponseSearchEngine_t response;
 
@@ -43,14 +48,23 @@ public class ClientMain {
                     System.out.println(input);
                 }
                 else if (key == KeyPressReader.INTRO) {
-                    
+                    Song selected = menu.getSelectedSong();
+                    String dir = historialOfSearches.getMP3ByName(selected);
+                    if(dir == null) {
+                        // Song not available, request to server made.
+                        // TODO: Add the code to transform the song to the name that will be sent to the server.
+                        client.requestReceiveFile(selected, dir);
+                        historialOfSearches.addSong(selected, dir); // Add the searched song to the directory.
+                    }
+                    // If available, automatically play it.
+                    mp3Player.play("data/" + dir + ".mp3"); // TODO: Revise the format of the mp3 saving.                
                 } else {
                     pressedChar = (char) key;
                     input+=pressedChar;
                     clearConsole();
                     System.out.println(input);
                 }
-            } else { // En caso de TIMEOUT enviamos peticion al servidor para recibir la lista de canciones
+            } else { // If timeout occurs, search for the list of songs.
                 client.requestSearchEngine(input, -1L);
                 response = client.receiveSearchEngine();
                 menu = new Menu(response.songList);

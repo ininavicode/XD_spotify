@@ -19,6 +19,10 @@ public class Menu {
         return selectedIndex;
     }
 
+    public Song getSelectedSong() {
+        return songs.get(selectedIndex);
+    }
+
     // Cambiar la canción seleccionada
     public void selectSong(boolean incremento) {
         if (selectedIndex >= 0 && selectedIndex <= songs.size()-1) {
