@@ -55,5 +55,6 @@ public class ClientMain {
 
         client.requestReceiveFile(toRequest, DATA_PATH + toRequest.toFilename());  // request the mp3
         // // FIXED: Check why nulls are pasted in strtest.txt (does it matter for the final version???).
+        System.out.println("END ACHIEVED CORRECTLY");
     }
 }
