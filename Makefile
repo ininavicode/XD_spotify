@@ -1,7 +1,7 @@
 SRC_DIR = src
 BUILD_DIR = build
 # MAIN_FILE = main.test
-COMPILER_FLAGS = -g
+COMPILER_FLAGS = -g -Xlint:unchecked
 
 # Find all .java files in src
 SOURCES := $(shell find $(SRC_DIR) -name "*.java")

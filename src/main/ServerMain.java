@@ -83,7 +83,7 @@ public class ServerMain {
         }
 
 
-        Map.Entry[] mapEntries = new Map.Entry[songList.size()];
+        Map.Entry<Song, String>[] mapEntries = new Map.Entry[songList.size()];
 
         int i = 0;
         for (Song song : songList) {

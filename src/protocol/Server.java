@@ -342,7 +342,7 @@ public class Server {
                     tempHist.ttl = DEFAULT_TTL; // Restart ttl, new query for this user done.
                     String lastSearch = tempHist.lastSearch;
                     tempHist.lastSearch = cond; // Subtitute the last search done in the session.
-                    if(0 > lastSearch.compareToIgnoreCase(cond)) { // If the condition contains less characters or is less than the initial condition ...
+                    if(!lastSearch.toLowerCase().startsWith(cond.toLowerCase())) { // If the condition contains less characters or is less than the initial condition ...
                         result.songList = searchEngine.getSongsWithCondition(cond); // ... the search will be done in the total list of songs.    
                     }
                     else {
