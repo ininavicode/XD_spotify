@@ -26,7 +26,7 @@ public class ClientMain {
         System.out.print("\nClick enter to send second request");
         System.in.read();
         
-        // FIXME: An error ocurres with the second request at the server
+        // FIXED: An error ocurres with the second request at the server
         client.requestSearchEngine("Fam", response.cookie); 
 
         System.out.println("\nWaiting for server response");
