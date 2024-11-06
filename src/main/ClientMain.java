@@ -10,9 +10,11 @@ import song.*;
 import mp3_player.*;
 
 public class ClientMain {
+    private static final String DATAPATH = "data/";
 
     private static final int TIMEOUT = 5000;
     public static void main(String[] args) throws IOException {
+        
         // ##################### main variables #####################
         Client client = new Client("127.0.0.1", 12000);
         SearchEngine historialOfSearches = new SearchEngine(); // Creation of the list of songs already searched with this client this session (flushes when restarting the app).
@@ -53,11 +55,12 @@ public class ClientMain {
                     if(dir == null) {
                         // Song not available, request to server made.
                         // TODO: Add the code to transform the song to the name that will be sent to the server.
-                        client.requestReceiveFile(selected, dir);
+                        dir = selected.toFilename();
+                        client.requestReceiveFile(selected, DATAPATH + dir);
                         historialOfSearches.addSong(selected, dir); // Add the searched song to the directory.
                     }
                     // If available, automatically play it.
-                    mp3Player.play("data/" + dir + ".mp3"); // TODO: Revise the format of the mp3 saving.                
+                    mp3Player.play(DATAPATH + dir); // TODO: Revise the format of the mp3 saving.                
                 } else {
                     pressedChar = (char) key;
                     input+=pressedChar;

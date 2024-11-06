@@ -24,7 +24,7 @@ public class SongList {
      * @param raw : byte[] The data of the ArrayList<Song> encoded with the default charset 
      * @return An ArrayList<Song> instance containing the data encoded with the default charset at byte[] raw
      */
-    static public ArrayList<Song> fromByteRaw(byte[] raw) throws ExceptionInInitializerError {
+    static public ArrayList<Song> fromByteRaw(byte[] raw) throws IllegalArgumentException {
         String decodedRaw = new String(raw);
         String[] songRawList = decodedRaw.split("\n");
         

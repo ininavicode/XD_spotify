@@ -171,7 +171,7 @@ public class Client {
                 short startID = (short)(nStream * streamSize), endID;
                 boolean end = false;
 
-                short streamEnd = (short)((nStream + 1) * streamSize);
+                short streamEnd = (short)Math.min(nPacketsToReceive, (short)((nStream + 1) * streamSize));
 
                 while (!end) {
 

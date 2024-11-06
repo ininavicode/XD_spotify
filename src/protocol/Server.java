@@ -236,6 +236,7 @@ public class Server {
             // the file does not exist
             nPackets = 0;
         }
+        System.out.println("TOTAL PACKETS TO SEND: " + nPackets);
         
         byte[] byteBuffer = new byte[2];
         byteBuffer[0] = (byte)(nPackets >> 8);
@@ -342,7 +343,7 @@ public class Server {
                     tempHist.ttl = DEFAULT_TTL; // Restart ttl, new query for this user done.
                     String lastSearch = tempHist.lastSearch;
                     tempHist.lastSearch = cond; // Subtitute the last search done in the session.
-                    if(0 > lastSearch.compareToIgnoreCase(cond)) { // If the condition contains less characters or is less than the initial condition ...
+                    if(!lastSearch.startsWith(cond.toLowerCase())) { // If the condition contains less characters or is less than the initial condition ...
                         result.songList = searchEngine.getSongsWithCondition(cond); // ... the search will be done in the total list of songs.    
                     }
                     else {
@@ -374,7 +375,7 @@ public class Server {
             long cookie = generateCookie(actualDate, listOfSongs);
             histInfo.ttl = DEFAULT_TTL;
             histInfo.histList = listOfSongs;
-            histInfo.lastSearch = cond;
+            histInfo.lastSearch = cond.toLowerCase();
             synchronized(syncroHandler) {
                 historialOfSearches.put(cookie, histInfo);
             }
