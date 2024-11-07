@@ -17,10 +17,16 @@ extern "C" {
 #define keyboard_KeyPressReader_ARROW_RIGHT 1004L
 #undef keyboard_KeyPressReader_BACKSPACE
 #define keyboard_KeyPressReader_BACKSPACE 127L
+#undef keyboard_KeyPressReader_SPACE
+#define keyboard_KeyPressReader_SPACE 32L
 #undef keyboard_KeyPressReader_INTRO
 #define keyboard_KeyPressReader_INTRO 10L
 #undef keyboard_KeyPressReader_TAB
 #define keyboard_KeyPressReader_TAB 9L
+#undef keyboard_KeyPressReader_Q_MAYUS
+#define keyboard_KeyPressReader_Q_MAYUS 81L
+#undef keyboard_KeyPressReader_Q_MINUS
+#define keyboard_KeyPressReader_Q_MINUS 113L
 /*
  * Class:     keyboard_KeyPressReader
  * Method:    getKey

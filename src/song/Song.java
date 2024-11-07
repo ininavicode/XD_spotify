@@ -214,6 +214,7 @@ public class Song {
      */
     public static Song filenameToSong(String fileName) {
         // TODO: COmplete function
+        return null;
     }
 
     /**

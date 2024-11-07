@@ -31,6 +31,7 @@ public class KeyPressReader {
     public static final int ARROW_RIGHT = 1004;
 
     public static final int BACKSPACE = 127;
+    public static final int SPACE = 32;
     public static final int INTRO = 10;
     public static final int TAB = 9;
     public static final int Q_MAYUS = 81;

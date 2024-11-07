@@ -38,16 +38,6 @@ public class ClientMain {
         int state = WRITING_INF;
         
         while (true) {
-            /* 
-            if(shouldWait) {
-                state = esperarDatosUnTiempo();
-            }
-            else {
-                state = esperarDatos();
-                if(state == WRITING) shouldWait = true; // The first data has been written.
-                // else PLAYING, no timeouts needed.
-            }
-            */
             switch (state) {
                 case WRITING_INF:
                     menu.render();
@@ -99,8 +89,6 @@ public class ClientMain {
     }
 
     private static int reproducirCancion() {
-        int res = 0;
-
         selected = menu.getSelectedSong();
         dir = historialOfSearches.getMP3ByName(selected);
         if(dir == null) {
@@ -124,10 +112,14 @@ public class ClientMain {
             key = KeyPressReader.getKey();
             switch (key) {
                 case KeyPressReader.Q_MAYUS:
-                    res = WRITING_INF;
+                    clearConsole();
                     salir = true;
                     break;
-                case KeyPressReader.BACKSPACE:
+                case KeyPressReader.Q_MINUS:
+                    clearConsole();
+                    salir = true;
+                    break;
+                case KeyPressReader.SPACE:
                     if (pausa) {
                         mp3Player.play();
                         pausa = false;
@@ -145,7 +137,7 @@ public class ClientMain {
                     break;
             }
         }
-        return res;
+        return WRITING_INF;
     }
     
     private static int esperarDatos() {
@@ -154,23 +146,23 @@ public class ClientMain {
         key = KeyPressReader.getKey();
         if (key == KeyPressReader.ARROW_UP) {
             menu.decrementarIndice();
-            System.out.println(menu.getSelectedIndex());
+            clearConsole();
             res = WRITING_TIME;
         }
         else if (key == KeyPressReader.ARROW_DOWN) {
             menu.incrementarIndice();
-            System.out.println(menu.getSelectedIndex());
+            clearConsole();
             res = WRITING_TIME;
         }
         else if (key == KeyPressReader.BACKSPACE) {
-            input = input.substring(0,input.length() - 1);
-            clearConsole();
-            System.out.println(input);
+            if (input.length() > 0) {
+                input = input.substring(0, input.length() - 1);
+            }
+            //clearConsole();
             res = WRITING_TIME;
         }
         else if (key == KeyPressReader.INTRO) {
             res = PLAYING;     
-            //shouldWait = false;        
         } else {
             pressedChar = (char) key;
             input+=pressedChar;
@@ -198,18 +190,19 @@ public class ClientMain {
         if (key != -1) {
             if (key == KeyPressReader.ARROW_UP) {
                 menu.decrementarIndice();
-                System.out.println(menu.getSelectedIndex());
+                clearConsole();
                 res = WRITING_TIME;
             }
             else if (key == KeyPressReader.ARROW_DOWN) {
                 menu.incrementarIndice();
-                System.out.println(menu.getSelectedIndex());
+                clearConsole();
                 res = WRITING_TIME;
             }
             else if (key == KeyPressReader.BACKSPACE) {
-                input = input.substring(0,input.length() - 1);
-                clearConsole();
-                System.out.println(input);
+                if (input.length() > 0) {
+                    input = input.substring(0, input.length() - 1);
+                }
+                //clearConsole();
                 res = WRITING_TIME;
             }
             else if (key == KeyPressReader.INTRO) {
@@ -246,7 +239,8 @@ public class ClientMain {
         System.out.println("----------- OPCIONES -----------");
         System.out.println("---- PAUSE/RESUME (SPACE) ------");
         System.out.println("-------- +10 SEC (--->) --------");
-        System.out.println("-------- -10 SEC (--->) --------");
+        System.out.println("-------- -10 SEC (<---) --------");
+        System.out.println("---------- SALIR (Q) -----------");
     }
     
 }
