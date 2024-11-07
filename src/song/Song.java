@@ -96,12 +96,8 @@ public class Song {
 
         authorsList = new ArrayList<>(parsedList.length);
 
-        if (parsedList.length == 1) {
+        if (parsedList.length < 2) {
             throw new IllegalArgumentException();
-        }
-        else if (parsedList.length == 0) {
-            name = "";
-            authorsList.clear();
         }
         else {
             
@@ -197,10 +193,34 @@ public class Song {
     // ##################### static #####################
     /**
      * Converts the name of the song to a the established name for the .mp3 files
+     * 
      * @return The name of the .mp3
      */
     public static String songToFilename(Song song) {
-        return song.getName().replace(' ', '-') + ".mp3";
+        String aux = song.getName().replace(' ', '-');
+        int numAuthors = song.getAuthorsCount();
+        for(int i = 0; i < numAuthors; i++)  {
+            aux += "_" + song.getAuthor(i).replace(' ', '-');
+        }
+        return aux + ".mp3";
+    }
+
+    /**
+     * Method that converts a filename to a song instance. The format 
+     * of the song must be
+     *          song-name_author1_author2_..._author-n.mp3
+     * 
+     * @param fileName The name of the file that represents the song.
+     * @return The instance of the song created.
+     * @pre The file name must be in the correct format especified above.
+     */
+    public static Song filenameToSong(String fileName) {
+        String[] result = fileName.split("_");
+        Song resultSong = new Song(result[0]);
+        for(int i = 1; i < result.length; i++) {
+            resultSong.addAuthor(result[i]);
+        }
+        return resultSong;
     }
 
     /**

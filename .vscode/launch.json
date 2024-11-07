@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ClientMain",
+            "request": "launch",
+            "mainClass": "main.ClientMain",
+            "projectName": "XD_spotify_8f92911e"
+        },
+        {
+            "type": "java",
             "name": "Attach",
             "request": "attach",
             "hostName": "localhost",

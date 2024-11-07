@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import packetizer.Packetizer;
 import search_engine.SearchEngine;
 import song.*;
@@ -289,15 +290,11 @@ public class Server {
         /**
          * Constructor of the class.
          * 
-         * @param listOfInitialSongs A map which contains each song with its mp3 directory name in order to be added to the search engine.
-         * @pre Null values are not checked as this information will be put by the programmers.
+         * @param fileName The fileName from which the server will have the list of all of the songs available.
          */
-        public SessionHandler(Map<Song, String> listOfInitialSongs) {
-            searchEngine = new SearchEngine();
-            syncroHandler = new Object();
-            listOfInitialSongs.forEach((key, value) ->{
-                searchEngine.addSong(key, value); // The songs will be added to the hashmap of the search engine.
-            });
+        public SessionHandler(String fileName) {
+            searchEngine = new SearchEngine(fileName);
+            syncroHandler = new Object(); // To control the timeouts to the different threads.
             historialOfSearches = new HashMap<>(100); // Initial capacity to avoid constantly making O(n) arrangements of the hash.
             // Generation and start of the thread that will count the timeouts.
             timeoutCalc = new Thread(() -> {
@@ -316,14 +313,15 @@ public class Server {
             searchEngine.addSong(song, mp3dir);
         }
 
-        /**
-         * Method to remove a song from the search engine.
-         * 
-         * @param song The song to be removed.
-         */
-        public void removeSong(Song song) {
-            searchEngine.removeSong(song);
-        }
+        // For now, not permitted.
+        // /**
+        //  * Method to remove a song from the search engine.
+        //  * 
+        //  * @param song The song to be removed.
+        //  */
+        // public void removeSong(Song song) {
+        //     searchEngine.removeSong(song);
+        // }
 
         /**
          * Method that makes a search in a historial list of a user or the total list of songs.
@@ -341,22 +339,29 @@ public class Server {
                     HistorialInfo tempHist = historialOfSearches.get(cookie);
                     tempHist.ttl = DEFAULT_TTL; // Restart ttl, new query for this user done.
                     String lastSearch = tempHist.lastSearch;
-                    tempHist.lastSearch = cond; // Subtitute the last search done in the session.
-                    if((lastSearch.length() == 0) || !cond.startsWith(lastSearch.toLowerCase()) || (lastSearch.length() < cond.length())) { // If the condition contains less characters or is less than the initial condition ...
-                        result.songList = searchEngine.getSongsWithCondition(cond); // ... the search will be done in the total list of songs.    
+                    if(cond.length() != 0) {
+                        tempHist.lastSearch = cond; // Subtitute the last search done in the session.
+                        if(!lastSearch.startsWith(cond.toLowerCase())) { // If the condition contains less characters or is less than the initial condition ...
+                            result.songList = searchEngine.getSongsWithCondition(cond); // ... the search will be done in the total list of songs.    
+                        }
+                        else {
+                            result.songList = SearchEngine.getSongsWithCondition(SongList.fromByteRaw(tempHist.histList.getBytes()), cond);
+                        }
+                        tempHist.histList = SongList.toString(result.songList);
                     }
-                    else {
-                        result.songList = SearchEngine.getSongsWithCondition(SongList.fromByteRaw(tempHist.histList.getBytes()), cond);
+                    else { // A void search means that the session has expired.
+                        historialOfSearches.remove(cookie);
+                        result.songList = new ArrayList<>(); // An empty list, as no coincidence has been made.
+                        result.cookie = -1; // Automatically end the session.
                     }
-                    tempHist.histList = SongList.toByteRaw(result.songList).toString();
-                    return result;
                 }
                 else { // The session did not exist or had expired for a timeout, new search needed.
                     result.songList = searchEngine.getSongsWithCondition(cond);                          // Make the search.
-                    result.cookie = allocateUser(cond, SongList.toByteRaw(result.songList).toString());  // allocate the session in the hash map.
-                    return result;                                                                          // Return the results of the search.
+                    result.cookie = allocateUser(cond, SongList.toString(result.songList));  // allocate the session in the hash map.
+                                                                                          // Return the results of the search.
                 }
             }
+            return result; 
         }
 
         // ##################### PRIVATE METHODS/CLASSES #####################

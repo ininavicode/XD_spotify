@@ -6,18 +6,25 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class SongList {
-    /**
-     * Converts the data of an ArrayList<Song> instance to a byte[]
+
+    /*
+     * Converts the data of the list to a String instance.
      */
-    static public byte[] toByteRaw(ArrayList<Song> songsList) {
+    public static String toString(ArrayList<Song> songsList) {
         String buffer = "";
         final int songListSize = songsList.size();
 
         for (int i = 0; i < songListSize; i++) {
             buffer += songsList.get(i).toCharRaw() + (i < (songListSize - 1) ? "\n" : "");
         }
+        return buffer;
+    }
 
-        return buffer.getBytes();
+    /**
+     * Converts the data of an ArrayList<Song> instance to a byte[]
+     */
+    static public byte[] toByteRaw(ArrayList<Song> songsList) {
+        return toString(songsList).getBytes();
     } 
 
     /**

@@ -3,6 +3,10 @@ package search_engine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import song.*;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * Class that defines the search engine for the server and the client.
  * It has a hash for songs and an arraylist for saving the info of the songs.
@@ -11,12 +15,30 @@ import song.*;
 public class SearchEngine {
     // Instance attributes
     private HashMap<Song, String> songsHash; 
+    String fileName;
 
     /**
      * Constructor of the class.
+     * 
+     * @param fileName The file from which the search engine will initially load all the data.
+     * @pre The filename must be in the correct format, first the number of songs, then the list of songs.
      */
-    public SearchEngine() {
+    public SearchEngine(String fileName) {
         songsHash = new HashMap<>();
+        try(Scanner fileReader = new Scanner(new File(fileName))) {
+            int numSongs = Integer.parseInt(fileReader.nextLine()); // The file structure will always be the same.
+            String nextSongFileFormat;
+            Song nextSong;
+            for(int i = 0; i < numSongs; i++) {
+                nextSongFileFormat = fileReader.nextLine(); // Read the mp3 format of the song.
+                nextSong = new Song(nextSongFileFormat);
+                songsHash.put(nextSong, Song.songToFilename(nextSong));
+            }
+            this.fileName = fileName;
+        }
+        catch (FileNotFoundException exc) {
+            exc.printStackTrace();
+        }
     }
 
     /**
@@ -39,6 +61,16 @@ public class SearchEngine {
     }
 
     /**
+     * Indicates if the hash contains the mp3.
+     * 
+     * @param mp3Name The MP3 name to be checked.
+     * @return True if it is contained, false otherwise.
+     */
+    public boolean containsMP3(String mp3Name) {
+        return songsHash.containsValue(mp3Name);
+    }
+
+    /**
      * Returns all the songs that have a coincidence with cond.
      * 
      * @param cond The string that conditions the result.
@@ -56,6 +88,7 @@ public class SearchEngine {
         return newList;
     }
 
+    // TODO: EDIT FILE WITH NEW SONG ADDITIONS.
     /**
      * Adds a song to the list and the hash of songs.
      * 
@@ -68,11 +101,12 @@ public class SearchEngine {
         }
     }
 
-    public void removeSong(Song song) {
-        if(song != null) songsHash.remove(song);
-    }
+    // For now this option is not available.
+    // public void removeSong(Song song) {
+    //     if(song != null) songsHash.remove(song);
+    // }
 
-    /* CLASS METHODS */
+    // ##################### CLASS METHODS #####################
     /**
      * Class method that allows to search in a subList for the coincidences to cond.
      * 
