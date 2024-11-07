@@ -24,16 +24,26 @@ public class SongList {
      * @param raw : byte[] The data of the ArrayList<Song> encoded with the default charset 
      * @return An ArrayList<Song> instance containing the data encoded with the default charset at byte[] raw
      */
-    static public ArrayList<Song> fromByteRaw(byte[] raw) throws ExceptionInInitializerError {
+    static public ArrayList<Song> fromByteRaw(byte[] raw) throws IllegalArgumentException {
         String decodedRaw = new String(raw);
         String[] songRawList = decodedRaw.split("\n");
-        
-        ArrayList<Song> output = new ArrayList<>(songRawList.length);
-        
-        // generate a song for each string and add it into the songs list
-        for (String songRaw : songRawList) {
-            output.add(new Song(songRaw));
+        ArrayList<Song> output;
+
+        // this indicates that there is any song at the list
+        if (songRawList.length == 1 &&  songRawList[0].length() == 0) {
+            output = new ArrayList<>(0);
         }
+        else {
+            
+            output = new ArrayList<>(songRawList.length);
+            
+            // generate a song for each string and add it into the songs list
+            for (String songRaw : songRawList) {
+                
+                output.add(new Song(songRaw));
+            }
+        }
+
         
         return output;
     }
