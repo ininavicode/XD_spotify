@@ -13,7 +13,7 @@ import song.*;
 
 public class ClientMain {
     // ##################### data config #####################
-    static final private String DATA_PATH = "data/";
+    static final private String DATA_PATH = "datacli/";
 
     // ##################### visualization condig #####################
     static final private int TEXT_INPUT_ROW = 10;

@@ -1,13 +1,13 @@
 package search_engine;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import song.*;
-import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.TreeMap;
+import song.*;
 
 /**
  * Class that defines the search engine for the server and the client.
@@ -15,8 +15,13 @@ import java.io.IOException;
  */
 
 public class SearchEngine {
+    // ##################### static properties #####################
+    // sugerences paremeters
+    private static final int DIV_FACTOR_DISTANCE_OF_CONTAINS = 2;
+    private static final int N_SUGERENCES = 5;
+
     // Instance attributes
-    private HashMap<Song, String> songsHash; 
+    private TreeMap<String, Song> songsNames; // list that contains the songs in string format to make the faster
     String fileName;
 
     /**
@@ -26,12 +31,13 @@ public class SearchEngine {
      * @pre The filename must be in the correct format, with the list of songs correctly formatted.
      */
     public SearchEngine(String fileName) {
-        songsHash = new HashMap<>();
+        songsNames = new TreeMap<>();
+        
         try(Scanner fileReader = new Scanner(new File(fileName))) {
             Song nextSong;
             while(fileReader.hasNextLine()) {
                 nextSong = new Song(fileReader.nextLine());
-                songsHash.put(nextSong, Song.songToFilename(nextSong));
+                songsNames.put(nextSong.toFilename(), nextSong);
             }
             this.fileName = fileName;
         }
@@ -47,7 +53,13 @@ public class SearchEngine {
      * @return Return the MP3 name of the song, null if it is not listed.
      */
     public String getMP3ByName(Song song) {
-        return songsHash.get(song);
+        if (songsNames.containsValue(song) == false) {
+            return null;
+        }
+        else {
+            return song.toFilename();
+        }
+
     }
 
     /**
@@ -56,7 +68,7 @@ public class SearchEngine {
      * @return List of the songs.
      */
     public ArrayList<Song> getSongsList() {
-        return new ArrayList<>(songsHash.keySet());
+        return new ArrayList<>(songsNames.values());
     }
 
     /**
@@ -66,7 +78,8 @@ public class SearchEngine {
      * @return True if it is contained, false otherwise.
      */
     public boolean containsMP3(String mp3Name) {
-        return songsHash.containsValue(mp3Name);
+
+        return songsNames.containsKey(mp3Name);
     }
 
     /**
@@ -77,13 +90,16 @@ public class SearchEngine {
      * @pre cond != null.
      */
     public ArrayList<Song> getSongsWithCondition(String cond) {
-        ArrayList<Song> newList = new ArrayList<>();
-        String updatedCond = cond.toLowerCase();                // To ignore the upper or lower case with the searchs.
-        songsHash.forEach((key, value) -> {
-                if(key.getName().toLowerCase().startsWith(updatedCond))
-                    newList.add(key);
-            }
-        );
+        ArrayList<Song> newList = new ArrayList<>(N_SUGERENCES);
+        String[] names = songsNames.keySet().toArray(new String[0]);
+
+        ArrayList<Integer> indexResults = indexSugerencesOf(names, cond);
+
+        for (Integer intg : indexResults) {
+            // this gets a song by its key
+            newList.add(songsNames.get(names[intg]));
+        }
+
         return newList;
     }
 
@@ -96,12 +112,12 @@ public class SearchEngine {
      */
     public void addSong(Song song, String mp3dir) {
         if(song != null && mp3dir != null) {
-            songsHash.put(song, mp3dir);
+            songsNames.put(mp3dir, song);
             try(FileWriter writer = new FileWriter(new File(fileName), true)) {
                 writer.write(song.toCharRaw() + '\n'); // Append the new song to the end of the file.
             }
             catch (IOException exc) {
-                songsHash.remove(song);
+                songsNames.remove(mp3dir);
                 exc.printStackTrace();
             }
         }
@@ -122,12 +138,106 @@ public class SearchEngine {
      * @pre subList != null && cond != null.
      */
     public static ArrayList<Song> getSongsWithCondition(ArrayList<Song> subList, String cond) {
-        ArrayList<Song> newList = new ArrayList<>();
-        String updatedCond = cond.toLowerCase();                // To ignore the upper or lower case with the searchs.
-        for(Song elem : subList) {
-            if(elem.getName().toLowerCase().startsWith(updatedCond))
-                newList.add(elem);
+        ArrayList<Song> newList = new ArrayList<>(N_SUGERENCES);
+
+        // convert the song list to list of filenames
+        String[] names = new String[subList.size()];
+        for (int i = 0; i < subList.size(); i++) {
+            names[i] = subList.get(i).toFilename();
         }
+
+        ArrayList<Integer> indexResults = indexSugerencesOf(names, cond);
+
+        for (Integer intg : indexResults) {
+            // this gets a song by its key
+            newList.add(subList.get(intg));
+        }
+
         return newList;
+    }
+
+    // ##################### static methods #####################
+    public static ArrayList<Integer> indexSugerencesOf(String[] list, String sch) {
+        sch = sch.toLowerCase();
+
+        int distanceOfStrings[] = new int[list.length]; // here is stored the acumulated distance for each string of the list
+        
+        final int listLen = list.length;
+        final int nSugerences = Math.min(listLen, N_SUGERENCES);
+
+        int maxDistances[] = new int[nSugerences]; // 5 sugerences
+        ArrayList<Integer> indexMaxDistances = new ArrayList<>(nSugerences);
+        
+        // init distances
+        for (int i = 0; i < nSugerences; i++) {
+            maxDistances[i] = -9999999;
+            indexMaxDistances.add(-1);
+        }
+
+        // add other distance calculations and find the max distances
+        for (int j = 0; j < listLen; j++) {
+
+            distanceOfStrings[j] = specialContains(sch, list[j]);
+
+            // save the max distance value found
+            for (int i = 0; i < N_SUGERENCES; i++) {
+                if (distanceOfStrings[j] > maxDistances[i]) {
+                    maxDistances[i] = distanceOfStrings[j];
+                    indexMaxDistances.remove(indexMaxDistances.size() - 1);
+                    indexMaxDistances.add(i, j);
+                    
+                    break;
+                }
+            }
+        }
+
+        // exclude so low distance sugerences
+        // low distance is considered less than a 75% of the top sureged string
+        int excludeThreshold = 3 * maxDistances[0] / 4; // max distance * (3/4)
+
+        for (int i = indexMaxDistances.size() - 1; i >= 0; i--) {
+            if (maxDistances[i] >= excludeThreshold) {
+                break;
+            }
+            else {
+                indexMaxDistances.remove(i);
+            }
+        }
+
+        return indexMaxDistances;
+    }
+
+
+    /**
+     * 
+     * @return Performs a contains method with all the substrings possible of "seq"
+     * of continous characters
+     * @example seq = "pat"
+     * len = 1
+     *  contains(p)
+     *  contains(a)
+     *  contains(t)
+     * len = 2
+     *  contains(pa)
+     *  contains(at)
+     * len = 3
+     *  contains(pat)
+     */
+    private static int specialContains(String seq, String str) {
+        final int seqLen = seq.length();
+
+        int acumulatedValue = 0;
+
+        for (int len = 1; len <= seqLen; len++) {
+            final int totalIterations = seqLen - len + 1;
+
+            for (int i = 0; i < totalIterations; i++) {
+                if (str.contains(seq.substring(i, i + len))) {
+                    acumulatedValue += len * len;
+                }
+            }
+        }
+
+        return acumulatedValue;
     }
 }

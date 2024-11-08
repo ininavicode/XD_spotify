@@ -66,6 +66,6 @@ clean:
 compile_native: 
 	# Creating shared library for key_reader.c
 	gcc -shared -o $(SRC_DIR)/keyboard/C/libkey_reader.so -fPIC \
-	    -I/usr/lib/jvm/java-17-openjdk-arm64/include \
-	    -I/usr/lib/jvm/java-17-openjdk-arm64/include/linux \
+	    -I/usr/lib/jvm/java-17-openjdk-amd64/include \
+	    -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux \
 	    $(SRC_DIR)/keyboard/C/key_reader.c
