@@ -8,8 +8,8 @@ import keyboard.KeyPressReader;
 import mp3.VLCJPlayer;
 import protocol.Client;
 import protocol.Protocol;
-import song.Song;
 import search_engine.*;
+import song.Song;
 
 public class ClientMain {
     // ##################### data config #####################
@@ -81,17 +81,19 @@ public class ClientMain {
         while (true) {
             switch (menuState) {
                 case MENU_TEXT_INPUT:
+
+                    displayTextInput();
                     if(establishTimeout)
                         key = KeyPressReader.getKeyTimeout(GET_KEY_TIMEOUT);
                     else {
                         key = KeyPressReader.getKey();
-                        establishTimeout = true; // The next key input from text will have timeout activated.
                     }
 
                     // timeout if key == -1
                     if (key == -1) {
                         // ############ state change ############
                         menuState = MENU_SEARCH_ENGINE_REQUEST;
+                        establishTimeout = false;
                         menu.clearScreen();
                         break;
                     }
@@ -99,6 +101,7 @@ public class ClientMain {
                         if (!songList.isEmpty()) {
                             // ############ state change ############
                             menuState = MENU_REQUEST_SELECTED_SONG;
+                            establishTimeout = false;
                             menu.clearScreen();
     
                             break;
@@ -181,7 +184,6 @@ public class ClientMain {
 
                 case MENU_SEARCH_ENGINE_REQUEST:
                     // protocol process ...
-                    establishTimeout = false; // To avoid making requests to the server until the next input.
                     Protocol.ResponseSearchEngine_t response;
                     try {
                         protocolClient.requestSearchEngine(textInputString, clientCookie);
@@ -215,10 +217,15 @@ public class ClientMain {
                     clientCookie = response.cookie;
 
                     if (!songList.isEmpty()) {
-                        selectedSongIndex = 0;
+                        if (selectedSongIndex >= songList.size()) {
+                            selectedSongIndex = songList.size() - 1;
+                        }
                         menu.setMenuItems(songList);
                         menu.displayMenu(0);
                         menu.setSelectedItem(0, 0);
+                    }
+                    else if (selectedSongIndex == -1) {
+                        selectedSongIndex = 0;
                     }
                     else {
                         selectedSongIndex = -1;
@@ -260,7 +267,8 @@ public class ClientMain {
     }
     
     static private void commonGetKeyTreatment(int key) {
-        if ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'A') || (key == ' ') || (key == KeyPressReader.BACKSPACE)) {
+        if ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key == ' ') || (key == KeyPressReader.BACKSPACE)) {
+            establishTimeout = true;
             if (key == KeyPressReader.BACKSPACE) {
                 if (textInputString.length() > 0) {
                     
@@ -271,19 +279,16 @@ public class ClientMain {
                 textInputString += (char)key;
             }
             
-            displayTextInput();
-
         }
-
-
         else {
             // update select index
-            if (key == KeyPressReader.ARROW_DOWN) {
+            establishTimeout = false;
+            if (key == KeyPressReader.ARROW_UP) {
                 if (selectedSongIndex > 0) {
                     selectedSongIndex--;
                 }
             }
-            else if  (key == KeyPressReader.ARROW_UP) {
+            else if  (key == KeyPressReader.ARROW_DOWN) {
                 if (selectedSongIndex < (songList.size() - 1)) {
                     selectedSongIndex++;
                 }

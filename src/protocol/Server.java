@@ -8,8 +8,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
-
 import packetizer.Packetizer;
 import search_engine.SearchEngine;
 import song.*;
@@ -341,7 +339,7 @@ public class Server {
                     String lastSearch = tempHist.lastSearch;
                     if(cond.length() != 0) {
                         tempHist.lastSearch = cond; // Subtitute the last search done in the session.
-                        if(!lastSearch.startsWith(cond.toLowerCase())) { // If the condition contains less characters or is less than the initial condition ...
+                        if(!lastSearch.startsWith(cond.toLowerCase()) || (lastSearch.length() > cond.length())) { // If the condition contains less characters or is less than the initial condition ...
                             result.songList = searchEngine.getSongsWithCondition(cond); // ... the search will be done in the total list of songs.    
                         }
                         else {
