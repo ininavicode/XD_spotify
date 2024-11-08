@@ -39,12 +39,11 @@ public class ClientMain {
     static private int menuState = 0;
 
     static private ArrayList<Song> songList;
-
-    static private boolean reproducingState;
-
     static private Client protocolClient;
-
+    
     static private VLCJPlayer vlcPlayer;
+    static private Object UdpdateTimeThreadSync = new Object();
+    static private volatile boolean reproducingState = false;
 
     static private long clientCookie = -1; // any cookie added to this client by default
 
@@ -74,6 +73,7 @@ public class ClientMain {
         // ##################### main loop #####################
         int key;
         Thread updateTimeThread = new Thread(ClientMain::MENU_REPRODUCING_updateTimeThread);
+        updateTimeThread.start();
 
         // in case of error the application stays at the MENU_ERROR_STATE, an the captured message error will be printed
         String errorMsg = "";
@@ -121,13 +121,23 @@ public class ClientMain {
 
                     if (key == ' ') {
                         // mp3 stop/play
-                        reproducingState = !reproducingState;
-                        if (reproducingState == true) {
-                            vlcPlayer.play(); // play the loaded file
+                        if (reproducingState == false) {
+                            synchronized (UdpdateTimeThreadSync) {
+                                reproducingState = true;
+                                UdpdateTimeThreadSync.notify();
+                                vlcPlayer.play(); // play the loaded file
+                            }
                         }
                         else {
-                            vlcPlayer.pause();
+                            synchronized (UdpdateTimeThreadSync) {
+                                reproducingState = false;
+                                vlcPlayer.pause();
+                                
+                            }
                         }
+
+                        // update the visualization state
+                        displayReproducingState(reproducingState);
 
                     }
                     else if (key == KeyPressReader.ARROW_LEFT) {
@@ -145,7 +155,11 @@ public class ClientMain {
                         menuState = MENU_TEXT_INPUT;
                         vlcPlayer.pause();
                         menu.clearScreen();
-                        updateTimeThread.interrupt();
+                        menu.setSelectedItem(selectedSongIndex, 0);
+                        establishTimeout = true;
+                        synchronized (UdpdateTimeThreadSync) {
+                            reproducingState = false;
+                        }
                         break;
                     }
 
@@ -172,13 +186,15 @@ public class ClientMain {
 
                     // ############ state change ############
                     menuState = MENU_REPRODUCING;
-                    reproducingState = true;
+                    synchronized (UdpdateTimeThreadSync) {
+                        reproducingState = true;
+                        UdpdateTimeThreadSync.notify();
+                    }
+
                     menu.clearScreen();
                     
                     menu.printText(SONG_NAME_ROW, 0, songList.get(selectedSongIndex), ConsoleMenu.ALIGN_LEFT);
-                    menu.printText(TIME_BAR_ROW - 1, 7, ConsoleMenu.LEFT_ARROW + "     " + ConsoleMenu.PAUSE + " / " + ConsoleMenu.PLAY + " (space)" + "     " + ConsoleMenu.RIGHT_ARROW, ConsoleMenu.ALIGN_CENTER);
-                    // start the thread to update the actual time of the song at the MENU_REPRODUCING
-                    updateTimeThread.start(); // TODO: START IS NOT CORRECT ONCE INTERRUPTED.
+                    displayReproducingState(reproducingState);
 
                     break;
 
@@ -220,12 +236,12 @@ public class ClientMain {
                         if (selectedSongIndex >= songList.size()) {
                             selectedSongIndex = songList.size() - 1;
                         }
+                        if (selectedSongIndex == -1) {
+                            selectedSongIndex = 0;
+                        }
                         menu.setMenuItems(songList);
                         menu.displayMenu(0);
                         menu.setSelectedItem(0, 0);
-                    }
-                    else if (selectedSongIndex == -1) {
-                        selectedSongIndex = 0;
                     }
                     else {
                         selectedSongIndex = -1;
@@ -249,23 +265,30 @@ public class ClientMain {
     } 
 
     private static void MENU_REPRODUCING_updateTimeThread() {
-        long lastTime = vlcPlayer.getActualTime();
-
         while (true) {
-            if (lastTime != vlcPlayer.getActualTime()) {
+            synchronized (UdpdateTimeThreadSync) {
+                while (!reproducingState) {
+                    try {
+                        UdpdateTimeThreadSync.wait(); // Wait if the thread is paused
+                    } catch (InterruptedException e) {
+                        System.out.println("Update time thread interrupted.");
+                        return; // Exit the loop if the thread is interrupted
+                    }
+                }
+    
+                // If not paused, update the time
                 menu.printLoadingBar(TIME_BAR_ROW, vlcPlayer.getActualTime(), vlcPlayer.getTotalLength());
-                lastTime = vlcPlayer.getActualTime();
             }
+    
             try {
-                // Add a short sleep to avoid busy-waiting and allow for thread interruptions
-                Thread.sleep(800); // Adjust the time as needed
+                Thread.sleep(900); // Adjust the time as needed
             } catch (InterruptedException e) {
-
+                System.out.println("Update time thread interrupted.");
                 return; // Exit the loop if the thread is interrupted
             }
         }
     }
-    
+
     static private void commonGetKeyTreatment(int key) {
         if ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key == ' ') || (key == KeyPressReader.BACKSPACE)) {
             establishTimeout = true;
@@ -304,5 +327,18 @@ public class ClientMain {
         menu.clearRow(TEXT_INPUT_ROW);
         menu.printText(TEXT_INPUT_ROW, 0, textInputString, ConsoleMenu.ALIGN_LEFT);
         menu.setCursor(TEXT_INPUT_ROW, textInputString.length());
+    }
+
+    static private void displayReproducingState(boolean state) {
+        menu.clearRow(TIME_BAR_ROW - 1);
+        if (state == true) {
+            menu.printText(TIME_BAR_ROW - 1, 7, ConsoleMenu.LEFT_ARROW + "     " + ConsoleMenu.PLAY + "     " + ConsoleMenu.RIGHT_ARROW, ConsoleMenu.ALIGN_CENTER);
+
+        }
+        else {
+            menu.printText(TIME_BAR_ROW - 1, 7, ConsoleMenu.LEFT_ARROW + "     " + ConsoleMenu.PAUSE + "     " + ConsoleMenu.RIGHT_ARROW, ConsoleMenu.ALIGN_CENTER);
+
+        }
+
     }
 }
