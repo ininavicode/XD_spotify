@@ -5,8 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
-import java.util.TreeMap;
 import song.*;
 
 /**
@@ -21,7 +21,7 @@ public class SearchEngine {
     private static final int N_SUGERENCES = 5;
 
     // Instance attributes
-    private TreeMap<String, Song> songsNames; // list that contains the songs in string format to make the faster
+    private HashMap<String, Song> songsNames; // list that contains the songs in string format to make the faster
     String fileName;
 
     /**
@@ -31,7 +31,7 @@ public class SearchEngine {
      * @pre The filename must be in the correct format, with the list of songs correctly formatted.
      */
     public SearchEngine(String fileName) {
-        songsNames = new TreeMap<>();
+        songsNames = new HashMap<>();
         
         try(Scanner fileReader = new Scanner(new File(fileName))) {
             Song nextSong;
@@ -177,10 +177,16 @@ public class SearchEngine {
         // add other distance calculations and find the max distances
         for (int j = 0; j < listLen; j++) {
 
-            distanceOfStrings[j] = specialContains(sch, list[j]);
+            String actualStr = list[j].toLowerCase();
+            distanceOfStrings[j] = specialContains(sch, actualStr);
+
+            if (actualStr.startsWith(sch)) {
+
+                distanceOfStrings[j] = 3 * distanceOfStrings[j];   
+            }
 
             // save the max distance value found
-            for (int i = 0; i < N_SUGERENCES; i++) {
+            for (int i = 0; i < nSugerences; i++) {
                 if (distanceOfStrings[j] > maxDistances[i]) {
                     maxDistances[i] = distanceOfStrings[j];
                     indexMaxDistances.remove(indexMaxDistances.size() - 1);

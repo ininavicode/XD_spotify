@@ -56,6 +56,11 @@ public class ClientMain {
      * Variable that will hold the local historial of songs available.
      */
     private static SearchEngine localHistorial;
+
+    /*
+     * Variable that indicates whether the song will be piled or played. 
+     */
+    private static boolean pileSong;
     
 
     // Demo method to test the class
@@ -80,6 +85,7 @@ public class ClientMain {
         
         // Display historial songs, in case they exist.
         if(!songList.isEmpty()) {
+            selectedSongIndex = 0;
             menu.setMenuItems(songList);
             menu.displayMenu(0);
             menu.setSelectedItem(0, 0);
@@ -104,8 +110,8 @@ public class ClientMain {
                         menu.clearScreen();
                         break;
                     }
-                    else if (key == KeyPressReader.INTRO) {
-                        if (!songList.isEmpty()) {
+                    else if (key == KeyPressReader.INTRO || key == KeyPressReader.TAB) {
+                        if (!songList.isEmpty() && (selectedSongIndex != -1)) {
                             // ############ state change ############
                             menuState = MENU_REQUEST_SELECTED_SONG;
                             establishTimeout = false;
@@ -163,6 +169,9 @@ public class ClientMain {
                         vlcPlayer.pause();
                         menu.clearScreen();
                         menu.setSelectedItem(selectedSongIndex, 0);
+                        if (!songList.isEmpty()) {
+                            menu.setSelectedItem(selectedSongIndex, 0);
+                        }
                         establishTimeout = true;
                         synchronized (UdpdateTimeThreadSync) {
                             reproducingState = false;
@@ -257,7 +266,9 @@ public class ClientMain {
 
                     // ############ state change ############
                     menuState = MENU_TEXT_INPUT;
-                    displayTextInput();
+                    if (!songList.isEmpty()) {
+                        menu.setSelectedItem(selectedSongIndex, 0);
+                    }
                     
                     break;
             
