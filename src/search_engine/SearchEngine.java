@@ -6,6 +6,8 @@ import song.*;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Class that defines the search engine for the server and the client.
@@ -21,17 +23,14 @@ public class SearchEngine {
      * Constructor of the class.
      * 
      * @param fileName The file from which the search engine will initially load all the data.
-     * @pre The filename must be in the correct format, first the number of songs, then the list of songs.
+     * @pre The filename must be in the correct format, with the list of songs correctly formatted.
      */
     public SearchEngine(String fileName) {
         songsHash = new HashMap<>();
         try(Scanner fileReader = new Scanner(new File(fileName))) {
-            int numSongs = Integer.parseInt(fileReader.nextLine()); // The file structure will always be the same.
-            String nextSongFileFormat;
             Song nextSong;
-            for(int i = 0; i < numSongs; i++) {
-                nextSongFileFormat = fileReader.nextLine(); // Read the mp3 format of the song.
-                nextSong = new Song(nextSongFileFormat);
+            while(fileReader.hasNextLine()) {
+                nextSong = new Song(fileReader.nextLine());
                 songsHash.put(nextSong, Song.songToFilename(nextSong));
             }
             this.fileName = fileName;
@@ -98,6 +97,13 @@ public class SearchEngine {
     public void addSong(Song song, String mp3dir) {
         if(song != null && mp3dir != null) {
             songsHash.put(song, mp3dir);
+            try(FileWriter writer = new FileWriter(new File(fileName), true)) {
+                writer.write(song.toCharRaw() + '\n'); // Append the new song to the end of the file.
+            }
+            catch (IOException exc) {
+                songsHash.remove(song);
+                exc.printStackTrace();
+            }
         }
     }
 

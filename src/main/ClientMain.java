@@ -9,7 +9,7 @@ import mp3.VLCJPlayer;
 import protocol.Client;
 import protocol.Protocol;
 import search_engine.*;
-import song.Song;
+import song.*;
 
 public class ClientMain {
     // ##################### data config #####################
@@ -77,6 +77,13 @@ public class ClientMain {
 
         // in case of error the application stays at the MENU_ERROR_STATE, an the captured message error will be printed
         String errorMsg = "";
+        
+        // Display historial songs, in case they exist.
+        if(!songList.isEmpty()) {
+            menu.setMenuItems(songList);
+            menu.displayMenu(0);
+            menu.setSelectedItem(0, 0);
+        }
 
         while (true) {
             switch (menuState) {
@@ -169,11 +176,12 @@ public class ClientMain {
                     establishTimeout = false; // No timeout till first letter is inputted in next MENU_TEXT_INPUT.
                     // ############ server and mp3 operations ############
                     String mp3ToPlay = songList.get(selectedSongIndex).toFilename();
+                    Song newSong = Song.filenameToSong(mp3ToPlay);
                     if(!localHistorial.containsMP3(mp3ToPlay)) {
                         // Request to server if it does not exist in the local files.
                         try {
                             protocolClient.requestReceiveFile(songList.get(selectedSongIndex), DATA_PATH + mp3ToPlay);
-                            
+                            localHistorial.addSong(newSong, mp3ToPlay); // add the song to the local historial in the human format.
                         } catch (IOException e) {
                             // ############ state change ############
                             menuState = MENU_ERROR_STATE;

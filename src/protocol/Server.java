@@ -354,9 +354,14 @@ public class Server {
                     }
                 }
                 else { // The session did not exist or had expired for a timeout, new search needed.
-                    result.songList = searchEngine.getSongsWithCondition(cond);                          // Make the search.
-                    result.cookie = allocateUser(cond, SongList.toString(result.songList));  // allocate the session in the hash map.
-                                                                                          // Return the results of the search.
+                    if(cond.length() != 0) {
+                        result.songList = searchEngine.getSongsWithCondition(cond);    
+                        result.cookie = allocateUser(cond, SongList.toString(result.songList));  // allocate the session in the hash map.
+                    }
+                    else {
+                        result.songList = new ArrayList<>(); // An empty list, as no coincidence has been made.
+                        result.cookie = -1; // Automatically end the session.
+                    }
                 }
             }
             return result; 

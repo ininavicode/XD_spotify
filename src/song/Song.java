@@ -32,7 +32,7 @@ public class Song {
      * Initializes the instance with the data of the rawChar, that should be in the proper format
      */
     public Song(String rawChar) throws IllegalArgumentException {
-            setFromCharRaw(rawChar);
+        setFromCharRaw(rawChar);
     }
 
     /**
@@ -215,10 +215,11 @@ public class Song {
      * @pre The file name must be in the correct format especified above.
      */
     public static Song filenameToSong(String fileName) {
-        String[] result = fileName.split("_");
-        Song resultSong = new Song(result[0]);
-        for(int i = 1; i < result.length; i++) {
-            resultSong.addAuthor(result[i]);
+        String aux = fileName.substring(0, fileName.length() - 4); // Erase .mp3 extension.
+        String[] result = aux.split("_");
+        Song resultSong = new Song(result[0].replace('-', ' '), result[1].replace('-', ' '));
+        for(int i = 2; i < result.length; i++) {               // if there are more authors ...
+            resultSong.addAuthor(result[i].replace('-', ' ')); // ... add them to the list.
         }
         return resultSong;
     }
