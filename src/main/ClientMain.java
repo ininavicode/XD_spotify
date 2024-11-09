@@ -111,6 +111,7 @@ public class ClientMain {
                         break;
                     }
                     else if (key == KeyPressReader.INTRO || key == KeyPressReader.TAB) {
+                        pileSong = (key == KeyPressReader.TAB) && !vlcPlayer.isEmpty();
                         if (!songList.isEmpty() && (selectedSongIndex != -1)) {
                             // ############ state change ############
                             menuState = MENU_REQUEST_SELECTED_SONG;
@@ -163,6 +164,16 @@ public class ClientMain {
                         vlcPlayer.advance10Seconds();
 
                     }
+                    else if (key == KeyPressReader.ARROW_UP) {
+                        // mp3 play next song
+                        vlcPlayer.playNextSong();
+
+                    }
+                    else if (key == KeyPressReader.ARROW_DOWN) {
+                        // mp3 play previous song
+                        vlcPlayer.playPreviousSong();
+
+                    }
                     else if (key == 'q') {
                         // ############ state change ############
                         menuState = MENU_TEXT_INPUT;
@@ -199,7 +210,13 @@ public class ClientMain {
                         }
                     }
 
-                    vlcPlayer.play(DATA_PATH + mp3ToPlay);
+                    if(pileSong) {
+                        vlcPlayer.addSong(DATA_PATH + mp3ToPlay);
+                    }
+                    else {
+                        vlcPlayer.play(DATA_PATH + mp3ToPlay);
+                        if(vlcPlayer.isEmpty()) vlcPlayer.addSong(DATA_PATH + mp3ToPlay);
+                    }
 
                     // ############ state change ############
                     menuState = MENU_REPRODUCING;
