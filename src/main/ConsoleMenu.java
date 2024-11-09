@@ -71,27 +71,42 @@ public class ConsoleMenu {
     public ConsoleMenu(int consoleWidth) {
         this.consoleWidth = consoleWidth;
     }
-    // Clear the entire screen
+    
+    /**
+     * Clears the screen and places the cursor to the top left
+     */
     public void clearScreen() {
         System.out.print("\u001B[2J\u001B[H"); // Clear screen and reset cursor to top left
     }
 
-    // Clear a specific row
+    /**
+     * Clears the given row
+     */
     public void clearRow(int row) {
         System.out.print("\u001B[" + row + ";1H" + "\u001B[2K"); // Move to row, clear the entire line
     }
 
-    // Set the cursor at the beginning of a specific row
+    /**
+     * Sets the cursor at the beginning of a specific row
+     */
     public void setCursor(int row) {
         System.out.print("\u001B[" + row + ";1H");
     }
 
-    // Method to set the cursor to a specific row and column
+    /**
+     * Method to set the cursor to a specific row and column
+     */
     public void setCursor(int row, int column) {
         System.out.print(String.format("\u001B[%d;%dH", row, column));
     }
 
-    // Print text with left, center, or right alignment from a specific position
+    /**
+     * Prints the given text with the given configuration
+     * @param row
+     * @param column
+     * @param text
+     * @param alignment
+     */
     public void printText(int row, int column, String text, int alignment) {
         int padding = 0;
         if (alignment == ALIGN_CENTER) {
@@ -102,6 +117,13 @@ public class ConsoleMenu {
         System.out.printf("\u001B[%d;%dH%s%s\n", row, column + padding, text, RESET);
     }
 
+    /**
+     * Prints the given song with the given configuration
+     * @param row
+     * @param column
+     * @param song
+     * @param alignment
+     */
     public void printText(int row, int column, Song song, int alignment) {
         int padding = 0;
         String songText = songPrintableString(song);
@@ -114,7 +136,9 @@ public class ConsoleMenu {
         System.out.printf("\u001B[%d;%dH%s%s\n", row, column + padding, songText, RESET);
     } 
 
-    // Updated method to create and display a loading bar with current and total time in mm:ss format
+    /**
+     * Method to create and display a loading bar with current and total time in mm:ss format
+     */
     public void printLoadingBar(int row, long actualSeconds, long totalSeconds) {
         clearRow(row); // Clear the row before printing
 
@@ -133,7 +157,10 @@ public class ConsoleMenu {
         System.out.printf("\u001B[%d;%dH%s %s%s %s%s\n", row, 0, currentTime, bar, RESET, totalTime, RESET);
     }
 
-    // Helper method to format seconds as mm:ss
+    /**
+     * Helper method to format seconds as mm:ss
+     * @return Converts the given seconds to a string with the following format -> mm:ss
+     */
     private String formatTime(long totalSeconds) {
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
@@ -141,7 +168,11 @@ public class ConsoleMenu {
     }
 
 
-    // Display the menu list from the left margin
+    /**
+     * Displays the loaded list
+     * @param leftMargin
+     * @param maxItems  The items to be displayed
+     */
     public void displayMenu(int leftMargin, int maxItems) {
         System.out.print("\nasdfasdfasdf");
         for (int i = 0; (i < menuItems.size()) && (i < maxItems); i++) {
@@ -154,7 +185,9 @@ public class ConsoleMenu {
         }
     }
 
-    // Update the selected menu item with white background and black text
+    /**
+     * Updates the selected menu item with white background and black text
+     */
     public void setSelectedItem(int index, int leftMargin, int maxItems) throws IndexOutOfBoundsException {
 
         if (index >= menuItems.size()) {
@@ -174,6 +207,9 @@ public class ConsoleMenu {
     }
 
     // ##################### private methods #####################
+    /**
+     * Creates a more visual string from a song to print at the list
+     */
     static private String songPrintableString(Song song) {
         String buff = song.getName();
         for (int i = 0; i < song.getAuthorsCount(); i++) {

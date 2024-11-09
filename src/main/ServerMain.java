@@ -1,16 +1,18 @@
 package main;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
 import protocol.*;
 import song.*;
 
 public class ServerMain {
 
     static final private String DATA_PATH = "dataserver/";
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, IllegalArgumentException {
+        // ##################### checking args #####################
+        // user should invoke the program with the <IP> <port> arguments
+        if (args.length != 1) {
+            throw new IllegalArgumentException("\nInvalid arguments invoking main. Ivoke main with the following parameters\n\t<listeningPort>");
+        }
         
         Server server = new Server(12000);
         Server.SessionHandler sessionHandler = initialListOfSongs(server);

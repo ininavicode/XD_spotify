@@ -19,6 +19,13 @@ public class Client {
     private DatagramSocket socket;
 
     // ##################### constructors #####################
+    /**
+     * Initializes the client with the given server parameters
+     * @param serverAddress
+     * @param serverPort
+     * @throws UnknownHostException
+     * @throws SocketException
+     */
     public Client(String serverAddress, int serverPort) throws UnknownHostException, SocketException {
 
         this.serverAddress = InetAddress.getByName(serverAddress);
@@ -28,6 +35,9 @@ public class Client {
     }
 
     // ##################### methods #####################
+    /**
+     * Closes the client, this includes closing the socket
+     */
     public void close() {
         socket.close();
     }
@@ -87,7 +97,7 @@ public class Client {
         requestFilePacketsSize(song);
         short nPacketsToReceive;
 
-        socket.setSoTimeout(20);    // 20 ms timeout
+        socket.setSoTimeout(300);    // 300 ms timeout
 
         while (true) { 
             try {
@@ -112,10 +122,6 @@ public class Client {
         // 1.1 If the number of the message is 0, that means that the song does not exist 
         //  (we will not treat this case, as the application doesn't allow the client to request an unexisting song)
         // 1.2 Reserve memory for all the packets to receive
-        // REVIEW: Analize what happens if the client does not receive the message with the n packets to receive
-        // 2. Enter into a loop, storing each packet received into the reserved list at the step 2
-        // 3. Once the timeout is on, check if all the packets at the list are not null, if any packet is null,
-        //  request it to the server
 
         byte[] buffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
@@ -135,7 +141,7 @@ public class Client {
         short streamReceivedCount = 0;
         int nStream = 0;
 
-        // OPTIMIZATION: Analize streamSize
+        // REVIEW: Analize streamSize
         final short streamSize = 1000;
         requestFilePacketsRange((short)0, (short)streamSize, song);
 
@@ -213,7 +219,14 @@ public class Client {
         return true;
     }    
 
-
+    /**
+     * Requests to the server the given range of packets (startPacketID included, endPacketID excluded), of the
+     * given song, the name of the song is traduced at the server to search is respective .mp3 file
+     * @param startPacketID Included to receive
+     * @param endPacketID   Excluded to receive
+     * @param song          The data of the given song.toFilename() mp3 file at the server will be received
+     * @pre The given song must exist at the server
+     */
     private void requestFilePacketsRange(short startPacketID, short endPacketID, Song song) throws IOException {
 
 
@@ -242,6 +255,11 @@ public class Client {
         socket.send(requestDatagram);
     }
 
+    /**
+     * Requests to the server to send a response with the number of packets of 1450 bytes
+     * of the respective .mp3 of the given song
+     * @param song
+     */
     private void requestFilePacketsSize(Song song) throws IOException {
         // | byte index | data             |
         // | ---------- | ---------------- |
@@ -265,13 +283,17 @@ public class Client {
     }
 
     // ##################### receiving #####################
+    /**
+     * Receives the response of the request sent with requestSearchEngine
+     * @return The response of the server
+     */
     public Protocol.ResponseSearchEngine_t receiveSearchEngine() throws IOException {
         // Preparem per rebre la resposta del servidor
         byte[] buffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
         // Receive the response from the server
-        socket.setSoTimeout(20);    // 20 ms timeout
+        socket.setSoTimeout(300);    // 300 ms timeout
         while (true) { 
             try {
                 socket.receive(responseDatagram);

@@ -2,6 +2,7 @@ package packetizer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Packetizer {
@@ -47,18 +48,25 @@ public class Packetizer {
     }
 
     // ##################### setters #####################
-    public boolean setFile(String filename) {
+    /**
+     * Loads the given filename to the packetizer
+     * @throws FileNotFoundException
+     */
+    public void setFile(String filename) throws FileNotFoundException {
         loadedFile = new File(filename);
 
         if (!loadedFile.exists()) {
-            System.out.println("File does not exist: " + filename);
-            return false;
+            throw new FileNotFoundException();
         }
 
         resetPacketizer();
-        return true;
     }
 
+    /**
+     * Sets the given "nPacket" to be received with the following getNextPacket
+     * @param nPacket
+     * @throws IOException
+     */
     public void seekPacket(short nPacket) throws IOException {
         // Calculate the byte offset
         long offset = (long) nPacket * packetsSize;
@@ -66,7 +74,9 @@ public class Packetizer {
     }
 
     // ##################### getters #####################
-
+    /**
+     * @return The total packets of "packetsSize" size of the loaded file
+     */
     public short getTotalPackets() {
         return (short)(Math.floor(loadedFile.length() / packetsSize) + 1);
     }

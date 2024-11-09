@@ -1,5 +1,6 @@
 package protocol;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -28,6 +29,11 @@ public class Server {
     private ByteBuffer lastPacketByteBuffer; // keeps the data of the last received packet withour the command type first byte
 
     // ##################### constructors #####################
+    /**
+     * Initialize a server with the given port
+     * @param serverPort
+     * @throws IOException
+     */
     public Server(int serverPort) throws IOException {
         this.serverPort = serverPort;
         datagramPacketBuffer = new byte[(int)Protocol.DATAGRAM_MAX_SIZE];
@@ -37,6 +43,10 @@ public class Server {
     }
 
     // ##################### methods #####################
+    /**
+     * Waits for any packet, once receives, parses the information of it and stores the data to be accessible later
+     * @throws IOException
+     */
     public void waitForPacket() throws IOException {
         datagramSocket.receive(datagramPacket);
 
@@ -62,6 +72,10 @@ public class Server {
 
 
     // ##################### getters #####################
+    /**
+     * Gets the command type of the last received packet
+     * @return The command type
+     */
     public Protocol.COMMAND_TYPE getLastPacketCommandType() {
         return lastPacketCommandType;
 
@@ -75,8 +89,9 @@ public class Server {
     }
 
     /**
-     * Gets automatically the song of the name of the last packet, in function of the last
+     * Gets automatically song name of the last packet, in function of the last
      *  command type
+     * @return Song name of the last packet
      */
     public String getLastPacket_SongName() {
         byte[] encodedStr;
@@ -112,6 +127,7 @@ public class Server {
 
     // ############ SEARCH_ENGINE_REQUEST ############
     /**
+     * @return The cookie value of the last received packet
      * @pre Last command type must be SEARCH_ENGINE_REQUEST
      */
     public long getLastPacket_Cookie() {
@@ -124,6 +140,10 @@ public class Server {
     }
 
     // ############ SONG_MP3_PACKETS_RANGE_REQUEST ############
+    /**
+     * @return The start packet ID of the last received packet
+     * @pre Last command type must be SONG_MP3_PACKETS_RANGE_REQUEST
+     */
     public short getLastPacket_StartPacketID() {
 
         // | byte index | data                         |
@@ -136,6 +156,10 @@ public class Server {
         return lastPacketByteBuffer.getShort(0);
     }
 
+    /**
+     * @return The end packet ID of the last received packet
+     * @pre Last command type must be SONG_MP3_PACKETS_RANGE_REQUEST
+     */
     public short getLastPacket_EndPacketID() {
 
         // | byte index | data                         |
@@ -149,6 +173,10 @@ public class Server {
     }
 
     // ##################### responses #####################
+    /**
+     * Sends the given search engine response (song list, cookie), to the source address of the last received packet
+     * @throws IOException
+     */
     public void responseSearchEngine(Protocol.ResponseSearchEngine_t response) throws IOException {
         byte[] encodedSongList = SongList.toByteRaw(response.songList);
 
@@ -167,9 +195,15 @@ public class Server {
     // OPTIMIZATION: Packets range request could be optimized keeping the packetizer open
     //  to not re-open the file for each request (optimized with the session)
     /**
-     * The range of packets [startPacketID, endPacketID) of the given filename, is sent to the client 
+     * Sends the range of packets [startPacketID, endPacketID) of the given filename, to the source address of the 
+     *  last received packet
+     * @param filename      .mp3 filename
+     * @param startPacketID Included
+     * @param endPacketID   Not included
+     * @throws IOException
+     * @throws FileNotFoundException
      */
-    public void responseFilePacketsRange(String filename, short startPacketID, short endPacketID) throws IOException {
+    public void responseFilePacketsRange(String filename, short startPacketID, short endPacketID) throws IOException, FileNotFoundException {
 
         Packetizer packetizer = new Packetizer((int)Protocol.PACKET_DATA_MAX_SIZE);
         packetizer.setFile(filename);
@@ -211,12 +245,13 @@ public class Server {
 
         short nPackets;
 
-        if (packetizer.setFile(filename)) {
+        try {
+            packetizer.setFile(filename);
             nPackets = packetizer.getTotalPackets();
-        }
-        else {
-            // the file does not exist
+            
+        } catch (FileNotFoundException e) {
             nPackets = 0;
+
         }
         System.out.println("TOTAL PACKETS TO SEND: " + nPackets);
         

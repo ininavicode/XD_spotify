@@ -65,7 +65,13 @@ public class ClientMain {
     
 
     // Demo method to test the class
-    public static void main(String[] args) throws SocketException, UnknownHostException {
+    public static void main(String[] args) throws SocketException, UnknownHostException, IllegalArgumentException {
+        // ##################### checking args #####################
+        // user should invoke the program with the <IP> <port> arguments
+        if (args.length != 2) {
+            throw new IllegalArgumentException("\nInvalid arguments invoking main. Ivoke main with the following parameters\n\t<serverIP> <serverPort>");
+        }
+
         // ##################### main initialization #####################
         menu = new ConsoleMenu(CONSOLE_WIDTH);
         menu.clearScreen();

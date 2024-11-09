@@ -17,7 +17,6 @@ import song.*;
 public class SearchEngine {
     // ##################### static properties #####################
     // sugerences paremeters
-    private static final int DIV_FACTOR_DISTANCE_OF_CONTAINS = 2;
     private static final int N_SUGERENCES = 5;
 
     // Instance attributes
@@ -157,6 +156,9 @@ public class SearchEngine {
     }
 
     // ##################### static methods #####################
+    /**
+     * @return An ArrayList<Integer> with the indexes of the "list" with the sugerences
+     */
     public static ArrayList<Integer> indexSugerencesOf(String[] list, String sch) {
         sch = sch.toLowerCase();
 
