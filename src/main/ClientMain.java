@@ -19,6 +19,7 @@ public class ClientMain {
     static final private int TEXT_INPUT_ROW = 10;
     static final private int SONG_NAME_ROW = 3;
     static final private int TIME_BAR_ROW = 10;
+    static final private int MAX_SONGS_SUGESTED = 8;
 
     // ##################### config constants #####################
     static final private int CONSOLE_WIDTH = 50;
@@ -87,8 +88,7 @@ public class ClientMain {
         if(!songList.isEmpty()) {
             selectedSongIndex = 0;
             menu.setMenuItems(songList);
-            menu.displayMenu(0);
-            menu.setSelectedItem(0, 0);
+            menu.setSelectedItem(0, 0, MAX_SONGS_SUGESTED);
         }
 
         while (true) {
@@ -168,9 +168,9 @@ public class ClientMain {
                         menuState = MENU_TEXT_INPUT;
                         vlcPlayer.pause();
                         menu.clearScreen();
-                        menu.setSelectedItem(selectedSongIndex, 0);
+                        menu.setSelectedItem(selectedSongIndex, 0, MAX_SONGS_SUGESTED);
                         if (!songList.isEmpty()) {
-                            menu.setSelectedItem(selectedSongIndex, 0);
+                            menu.setSelectedItem(selectedSongIndex, 0, MAX_SONGS_SUGESTED);
                         }
                         establishTimeout = true;
                         synchronized (UdpdateTimeThreadSync) {
@@ -257,8 +257,7 @@ public class ClientMain {
                             selectedSongIndex = 0;
                         }
                         menu.setMenuItems(songList);
-                        menu.displayMenu(0);
-                        menu.setSelectedItem(0, 0);
+                        menu.setSelectedItem(selectedSongIndex, 0, MAX_SONGS_SUGESTED);
                     }
                     else {
                         selectedSongIndex = -1;
@@ -267,7 +266,7 @@ public class ClientMain {
                     // ############ state change ############
                     menuState = MENU_TEXT_INPUT;
                     if (!songList.isEmpty()) {
-                        menu.setSelectedItem(selectedSongIndex, 0);
+                        menu.setSelectedItem(selectedSongIndex, 0, MAX_SONGS_SUGESTED);
                     }
                     
                     break;
@@ -331,12 +330,12 @@ public class ClientMain {
                 }
             }
             else if  (key == KeyPressReader.ARROW_DOWN) {
-                if (selectedSongIndex < (songList.size() - 1)) {
+                if (selectedSongIndex < (MAX_SONGS_SUGESTED - 1)) {
                     selectedSongIndex++;
                 }
             }
             if (!songList.isEmpty()) {
-                menu.setSelectedItem(selectedSongIndex, 0);
+                menu.setSelectedItem(selectedSongIndex, 0, MAX_SONGS_SUGESTED);
             }
         }
             

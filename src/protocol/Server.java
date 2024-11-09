@@ -123,22 +123,6 @@ public class Server {
         return lastPacketByteBuffer.getLong(0);
     }
 
-    /**
-     * @pre Last command type must be SONG_MP3_PACKET_REQUEST
-     */
-    // ############ SONG_MP3_PACKET_REQUEST ############
-    public short getLastPacket_PacketID() {
-
-        // | byte index | data         |
-        // | ---------- | ------------ |
-        // | 0          | command type |
-        // | 1...2      | packet id    |
-        // | 3...1500   | song name    |
-
-        return lastPacketByteBuffer.getShort(0);
-    }
-
-
     // ############ SONG_MP3_PACKETS_RANGE_REQUEST ############
     public short getLastPacket_StartPacketID() {
 

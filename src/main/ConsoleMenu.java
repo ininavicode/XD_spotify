@@ -142,9 +142,9 @@ public class ConsoleMenu {
 
 
     // Display the menu list from the left margin
-    public void displayMenu(int leftMargin) {
+    public void displayMenu(int leftMargin, int maxItems) {
         System.out.print("\nasdfasdfasdf");
-        for (int i = 0; i < menuItems.size(); i++) {
+        for (int i = 0; (i < menuItems.size()) && (i < maxItems); i++) {
             setCursor(0); // Example: Start menu items from row 2
             if (i == selectedItemIndex) {
                 System.out.printf("\u001B[%d;%dH%s%s- %s%s", i + 2, leftMargin, WHITE_BG, BOLD, songPrintableString(menuItems.get(i)), RESET);
@@ -155,16 +155,16 @@ public class ConsoleMenu {
     }
 
     // Update the selected menu item with white background and black text
-    public void setSelectedItem(int index, int leftMargin) throws IndexOutOfBoundsException {
+    public void setSelectedItem(int index, int leftMargin, int maxItems) throws IndexOutOfBoundsException {
 
         if (index >= menuItems.size()) {
             throw new IndexOutOfBoundsException();
         }
 
         clearScreen();
-        if (index >= 0 && index < menuItems.size()) {
+        if (index >= 0 && (index < menuItems.size())) {
             selectedItemIndex = index;
-            displayMenu(leftMargin); // Re-display the menu with the selected item highlighted
+            displayMenu(leftMargin, maxItems); // Re-display the menu with the selected item highlighted
         }
     }
 
