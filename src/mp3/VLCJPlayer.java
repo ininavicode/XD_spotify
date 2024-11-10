@@ -59,7 +59,7 @@ public class VLCJPlayer {
      * Method to go back 10 seconds of the song.
      */
     public void goBack10Seconds() {
-        player.mediaPlayer().controls().skipPosition(-1000);
+        player.mediaPlayer().controls().skipTime(-10000);
     }
 
     /**
