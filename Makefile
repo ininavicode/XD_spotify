@@ -9,7 +9,8 @@ LIBS = lib/vlcj-natives-4.8.3.jar:lib/jna-platform-jpms-5.14.0.jar:lib/jna-jpms-
 # Find all .java files in src
 SOURCES := $(shell find $(SRC_DIR) -name "*.java")
 
-JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk-amd64
+# Change amd or arm depending on the architecture of the machine that compiles and executes the program.
+JAVA_HOME ?= /usr/lib/jvm/java-17-openjdk-arm64
 
 
 all: compile_native check_vlc

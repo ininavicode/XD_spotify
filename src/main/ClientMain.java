@@ -78,7 +78,7 @@ public class ClientMain {
         localHistorial = new SearchEngine(DATA_PATH + "available_songs.csv");
         songList = localHistorial.getSongsList(); // Initially, songlist will be the local historial of songs.
 
-        protocolClient = new Client("127.0.0.1", 12000);
+        protocolClient = new Client(args[0], Integer.parseInt(args[1]));
 
         vlcPlayer = new VLCJPlayer();
 
@@ -235,7 +235,8 @@ public class ClientMain {
                     if (!localHistorial.containsMP3(mp3ToPlay)) {
                         // Request to server if it does not exist in the local files.
                         try {
-                            protocolClient.requestReceiveFile(songList.get(selectedSongIndex), DATA_PATH + mp3ToPlay);
+                            protocolClient.requestReceiveFile(clientCookie, songList.get(selectedSongIndex), DATA_PATH + mp3ToPlay);
+                            clientCookie = -1; // when a song is received, the session is automatically ended.
                             localHistorial.addSong(newSong, mp3ToPlay); // add the song to the local historial in the human format.
                         } catch (IOException e) {
                             // ############ state change ############

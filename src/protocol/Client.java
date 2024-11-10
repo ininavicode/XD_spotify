@@ -85,29 +85,41 @@ public class Client {
 
     /**
      * This method creates a new file with the given filename
+     * @param clientCookie The last available client cookie for the session.
      * @param filename : Name of the file to create -> "filename"
-     * @param song : Song to request to the server
+     * @param song : Song to request to the server.
      * @return True if the requested song exists. False if not.
      * @pre At this version, the file to receive can not be longer than (2^16 * 1450 B = 95.02 MB), due the 
      * limitation of 2 bytes for packetID (max for packetID = 2^16 different values)
      */
-    public boolean requestReceiveFile(Song song, String filename) throws IOException {
+    public boolean requestReceiveFile(long clientCookie, Song song, String filename) throws IOException {
         // request (start) ++++++++++++++++++++++++++++++++
 
-        requestFilePacketsSize(song);
+        requestFilePacketsSize(song, clientCookie);
         short nPacketsToReceive;
+        long cookieOfSendingSession;
+        ByteBuffer response;
 
         socket.setSoTimeout(300);    // 300 ms timeout
 
         while (true) { 
             try {
-                nPacketsToReceive = receiveFilePacketsSize();    // 20 ms timeout
+                response = receiveFilePacketsSize();    // 20 ms timeout
                 break;
                 
             } catch (SocketTimeoutException e) {
                 
             }
         }
+
+        // | byte index | data      |
+        // | ---------- | --------- |
+        // | 0...1      | n packets |
+        // | 2...9      | cookie    |
+
+        nPacketsToReceive = response.getShort();
+        cookieOfSendingSession = response.getLong(2);
+        
 
         // if the packet responses with 0, that means that the requested song does not exist
         if (nPacketsToReceive == 0) {
@@ -143,7 +155,7 @@ public class Client {
 
         // REVIEW: Analize streamSize
         final short streamSize = 1000;
-        requestFilePacketsRange((short)0, (short)streamSize, song);
+        requestFilePacketsRange((short)0, (short)streamSize, cookieOfSendingSession);
 
         while (!endReceiving) {
             try {
@@ -166,7 +178,7 @@ public class Client {
                     streamReceivedCount = 0;
                     nStream++;
                     // request the next 1000 packets
-                    requestFilePacketsRange((short)(nStream * streamSize), (short)((nStream + 1) * streamSize), song);
+                    requestFilePacketsRange((short)(nStream * streamSize), (short)((nStream + 1) * streamSize), cookieOfSendingSession);
 
                 }
                 
@@ -194,7 +206,7 @@ public class Client {
                         if (endID >= streamEnd) end = true;
                     }
     
-                    if (startID < streamEnd) requestFilePacketsRange(startID, endID, song);
+                    if (startID < streamEnd) requestFilePacketsRange(startID, endID, cookieOfSendingSession);
                     
 
                     startID = endID;
@@ -204,6 +216,8 @@ public class Client {
 
         }
         socket.setSoTimeout(0); // unable the timeout
+
+        communicateEndOfReceiving(cookieOfSendingSession); // The end of receiving must be communicated.
         // receive (end)   --------------------------------
         
         // ##################### create the file #####################
@@ -224,26 +238,26 @@ public class Client {
      * given song, the name of the song is traduced at the server to search is respective .mp3 file
      * @param startPacketID Included to receive
      * @param endPacketID   Excluded to receive
-     * @param song          The data of the given song.toFilename() mp3 file at the server will be received
+     * @param cookie        The cookie of the session where the name of the song is held in the server.
      * @pre The given song must exist at the server
      */
-    private void requestFilePacketsRange(short startPacketID, short endPacketID, Song song) throws IOException {
+    private void requestFilePacketsRange(short startPacketID, short endPacketID, long cookie) throws IOException {
 
 
         // | byte index | data                         |
         // | ---------- | ---------------------------- |
         // | 0          | command type                 |
-        // | 1...2      | packet id start (included)   |
-        // | 3...4      | packet id end (not included) |
-        // | 5...1500   | song name                    |
+        // | 1...8      | cookie session               |
+        // | 9...10     | packet id start (included)   |
+        // | 11...12    | packet id end (not included) |
         
-        byte[] encodedString = song.toByteRaw();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(5 + encodedString.length);
+        
+        ByteBuffer byteBuffer = ByteBuffer.allocate(13);
 
         byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_PACKETS_RANGE_REQUEST.value);
-        byteBuffer.putShort(1, startPacketID);
-        byteBuffer.putShort(3, endPacketID);
-        byteBuffer.put(5, encodedString);
+        byteBuffer.putLong(1, cookie);
+        byteBuffer.putShort(9, startPacketID);
+        byteBuffer.putShort(11, endPacketID);
 
         // create the datagram
         DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
@@ -260,17 +274,19 @@ public class Client {
      * of the respective .mp3 of the given song
      * @param song
      */
-    private void requestFilePacketsSize(Song song) throws IOException {
+    private void requestFilePacketsSize(Song song, long cookie) throws IOException {
         // | byte index | data             |
         // | ---------- | ---------------- |
         // | 0          | command type     |
-        // | 1...1500   | name of the song |
+        // | 1...8      | cookie           |
+        // | 9...1500   | name of the song |
         
         byte[] encodedString = song.toByteRaw();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(1 + encodedString.length);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(9 + encodedString.length);
         
         byteBuffer.put(0, Protocol.COMMAND_TYPE.SONG_MP3_N_PACKETS_REQUEST.value);
-        byteBuffer.put(1, encodedString);
+        byteBuffer.putLong(1, cookie);
+        byteBuffer.put(9, encodedString);
         
         // create the datagram
         DatagramPacket requestDatagram = new DatagramPacket(  byteBuffer.array(),
@@ -326,24 +342,37 @@ public class Client {
 
     /**
      * 
-     * @return The packets of the requested song with requestFilePacketsSize
+     * @return The information received from the request, containing the number of packets and cookie session.
      * @throws IOException
      */
-    private short receiveFilePacketsSize() throws IOException, SocketTimeoutException {
-        byte[] buffer = new byte[2];    // in theory, the sent number is an unsigned short, but for later it should be assigned with greater memory.
+    private ByteBuffer receiveFilePacketsSize() throws IOException, SocketTimeoutException {
+        byte[] buffer = new byte[80];
         DatagramPacket responseDatagram = new DatagramPacket(buffer, buffer.length);
 
         // Receive the response from the server
         socket.receive(responseDatagram);
 
-        // | byte index | data      |
-        // | ---------- | --------- |
-        // | 0...1      | n packets |
-
-        short output = (short)((responseDatagram.getData()[0] << 8) | (responseDatagram.getData()[1] & 0xFF));
-
-        return output;
+        return ByteBuffer.wrap(buffer);
     }
+
+    /**
+     * Method that indicates a server to finish a session.
+     * 
+     * @param cookie The cookie session to be ended.
+     */
+    private void communicateEndOfReceiving(long cookie) throws IOException{
+        // | byte index | data                             |
+        // | ---------- | -------------------------------- |
+        // | 0          | command type                     |
+        // | 1 . 8      | cookie session number            |
+        ByteBuffer response = ByteBuffer.allocate(9);
+        response.put(Protocol.COMMAND_TYPE.FINISH_COMM.value);
+        response.putLong(1, cookie);
+        DatagramPacket responsePacket = new DatagramPacket(response.array(), 9,
+                                            serverAddress,
+                                            serverPort);
+        socket.send(responsePacket);
+    }   
    
     
 }

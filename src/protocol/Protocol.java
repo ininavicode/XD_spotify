@@ -16,7 +16,8 @@ public class Protocol {
         INVALID_COMMAND((byte)0),
         SEARCH_ENGINE_REQUEST((byte)1),
         SONG_MP3_PACKETS_RANGE_REQUEST((byte)3),
-        SONG_MP3_N_PACKETS_REQUEST((byte)4);
+        SONG_MP3_N_PACKETS_REQUEST((byte)4),
+        FINISH_COMM((byte)5);
         
         private COMMAND_TYPE(byte value) {
             this.value = value;
@@ -29,6 +30,7 @@ public class Protocol {
             // else if (value == SONG_MP3_REQUEST.value) return SONG_MP3_REQUEST;
             else if (value == SONG_MP3_PACKETS_RANGE_REQUEST.value) return SONG_MP3_PACKETS_RANGE_REQUEST;
             else if (value == SONG_MP3_N_PACKETS_REQUEST.value) return SONG_MP3_N_PACKETS_REQUEST;
+            else if (value == FINISH_COMM.value) return FINISH_COMM;
             else return INVALID_COMMAND;
             
         }
@@ -54,7 +56,5 @@ public class Protocol {
 
         }
     }
-
-    // ##################### MP3 #####################
  
 }
