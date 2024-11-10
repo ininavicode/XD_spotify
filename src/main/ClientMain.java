@@ -151,7 +151,7 @@ public class ClientMain {
                         establishTimeout = false;
                         break;
                         
-                    } else if (key == KeyPressReader.INTRO || key == KeyPressReader.TAB) {
+                    } else if (key == KeyPressReader.INTRO) {
                         if (!songList.isEmpty() && (selectedSongIndex != -1)) {
                             // ############ state change ############
                             menuState = MENU_REQUEST_SELECTED_SONG;
