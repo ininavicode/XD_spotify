@@ -240,8 +240,9 @@ public class Server {
      * If the filename exists, the server sends a message to the client with the total size (in packets of PACKET_DATA_MAX_SIZE)
      * of the given filename, and the cookie that will hold the session until all the song is correctly sent.
      * If the filename does not exist, the server sends 0
-     * Additionally, a infinite session for the sending of packets is generated, so the name song must not be sent infinitely.
+     * Additionally, a session for the sending of packets is generated, so the name song must not be sent infinitely.
      * A cookie is returned in the packet, a valid number session if generated, -1 otherwise.
+     * 
      * @param filename
      * @param cookie The actual session cookie identifier.
      * @pre This method has to be called after receiving a petition of file packets size.
