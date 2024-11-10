@@ -257,7 +257,7 @@ public class Server {
         try {
             packetizer.setFile(filename);
             nPackets = packetizer.getTotalPackets();
-            newCookie = sessionHandler.generateInfiniteUser(getLastPacket_Cookie(), filename);
+            newCookie = sessionHandler.generateSongRequestUser(getLastPacket_Cookie(), filename);
             
         } catch (FileNotFoundException e) {
             nPackets = 0;

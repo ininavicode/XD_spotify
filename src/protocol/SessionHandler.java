@@ -145,12 +145,11 @@ public class SessionHandler {
      * @param songName The song name of the song requested.
      * @return
      */
-    public long generateInfiniteUser(long cookie, String songName) {
+    public long generateSongRequestUser(long cookie, String songName) {
         long newCookie;
         synchronized(syncroHandler) {
             if(historialOfSearches.containsKey(cookie)) {
                 HistorialInfo aux = historialOfSearches.get(cookie);
-                aux.ttl = -1; // Modify the session to become permanent.
                 aux.histList = songName;
                 aux.lastSearch = songName; // Both variables hold the song file name in the context of the server.
                 newCookie = cookie; // Session has not expired.
@@ -163,11 +162,20 @@ public class SessionHandler {
         return newCookie;
     }
 
+    /**
+     * Method that retrieves the song name from a session. The ttl of the session is 
+     * restarted when accessed.
+     * 
+     * @param cookie The cookie of the session.
+     * @return The name of the mp3 song.
+     */
     public String retreiveSongMP3Name(long cookie) {
         String result = null;
         synchronized(syncroHandler) {
             if(historialOfSearches.containsKey(cookie)) {
-                result = historialOfSearches.get(cookie).lastSearch; // both last search and histlist contain the name of the mp3 file.
+                HistorialInfo hist = historialOfSearches.get(cookie);
+                result = hist.lastSearch; // both last search and histlist contain the name of the mp3 file.
+                hist.ttl = DEFAULT_TTL; // 
             }
         }
         return result;

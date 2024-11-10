@@ -213,10 +213,9 @@ public class ClientMain {
 
                     } else if (key == 'q') {
                         // ############ state change ############
-                        menuState = MENU_TEXT_INPUT;
-                        vlcPlayer.pause();
-                        
+                        menuState = MENU_TEXT_INPUT;                        
                         synchronized (UdpdateTimeThreadSync) {
+                            if(reproducingState) vlcPlayer.pause();
                             reproducingState = false;
                         }
                         break;
