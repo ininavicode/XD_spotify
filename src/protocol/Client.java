@@ -146,7 +146,7 @@ public class Client {
         }
 
         // Step 2
-        socket.setSoTimeout(20); // 20 ms timeout
+        socket.setSoTimeout(100); // 20 ms timeout
         short receivedCount = 0;
         boolean endReceiving = false;
 
