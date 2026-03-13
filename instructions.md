@@ -1,7 +1,10 @@
-## Building instructions (bash)
+## Deploying instructions (bash)
 1. Compile
-$ make
+```bash
+make
+```
 
 2. Run
-$ make run
-
+```bash
+make run
+```
